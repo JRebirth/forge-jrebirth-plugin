@@ -1,4 +1,2 @@
-Tools
-=====
-
-JRebirth Tools (forge, maven ...)
+forge-jrebirth-plugin
+=====================
