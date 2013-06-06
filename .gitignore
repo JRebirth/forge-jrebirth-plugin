@@ -5,5 +5,9 @@
 *.war
 *.ear
 
+.classpath
+.project
+.settings/
+
 .forge_settings
 target
