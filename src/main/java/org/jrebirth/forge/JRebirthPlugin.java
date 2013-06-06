@@ -65,7 +65,7 @@ public class JRebirthPlugin implements Plugin {
     }
 
     @SetupCommand(help = "Installs basic setup to work with JRebirth Framework.")
-    public void setup(PipeOut out, @Option(name = "module", shortName = "m") final String moduleName) {
+    public void setup(PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.") final String moduleName) {
         if (moduleName == null) {
             if (!project.hasFacet(JRebirthFacet.class)) {
                 install.fire(new InstallFacets(JRebirthFacet.class));
@@ -90,43 +90,65 @@ public class JRebirthPlugin implements Plugin {
         }
     }
 
-    private void createUiFiles(CreatioinType type, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createUiFiles(CreatioinType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
-        DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax("ui." + name.toLowerCase()));
+        DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui"));
+
+        if (!directory.isDirectory()) {
+            out.println(ShellColor.BLUE, "The UI package is not exists. Creating it.");
+            directory.mkdir();
+        }
+
+        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui." + name.toLowerCase()));
+
         if (directory.isDirectory()) {
             out.println(ShellColor.RED, "Unable to Create package. The package '" + directory.toString() + "' is already found");
             return;
+        } else {
+            directory.mkdir();
         }
 
         if (type == CreatioinType.MVC) {
+            //TODO: Create MVC Files
         } else {
+            //TODO: Create MV Files
         }
 
     }
 
-    private void createNonUiFiles(CreatioinType type, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createNonUiFiles(CreatioinType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = null;
         //  sourceFolder.getChildDirectory(Packages.toFileSyntax("ui." + name.toLowerCase()));
-        String fileType = "";
+        String fileType = null;
         switch (type) {
             case COMMAND:
-                directory = sourceFolder.getChildDirectory(Packages.toFileSyntax("command."));
-                fileType = "";
+                directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".command."));
+                if (!directory.isDirectory()) {
+                    fileType = "Command";
+                }
                 break;
             case SERVICE:
-                directory = sourceFolder.getChildDirectory(Packages.toFileSyntax("service."));
-                fileType = "Service";
+                directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".service."));
+                if (!directory.isDirectory()) {
+                    fileType = "Service";
+                }
                 break;
             case RESOURCE:
-                directory = sourceFolder.getChildDirectory(Packages.toFileSyntax("resource."));
+                directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".resource."));
+                if (!directory.isDirectory()) {
+                    fileType = "Resource";
+                }
                 fileType = "";
                 break;
         }
 
-        if (!directory.isDirectory()) {
+        if (fileType != null) {
+            out.println(ShellColor.BLUE, "The " + fileType + " package is not exists. Creating it.");
             directory.mkdir();
         }
+
+        //TODO: Create Command/Service/Resource File
 
     }
 
@@ -136,18 +158,17 @@ public class JRebirthPlugin implements Plugin {
             out.println(ShellColor.RED, "Provide a proper name.");
             return;
         }
-
+        MetadataFacet metadata = project.getFacet(MetadataFacet.class);
         DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
-
         switch (type) {
             case MV:
             case MVC:
-                createUiFiles(type, sourceFolder, name, out);
+                createUiFiles(type, metadata.getTopLevelPackage(), sourceFolder, name, out);
                 break;
             case COMMAND:
             case SERVICE:
             case RESOURCE:
-                createNonUiFiles(type, sourceFolder, name, out);
+                createNonUiFiles(type, metadata.getTopLevelPackage(), sourceFolder, name, out);
                 break;
             default:
                 break;
@@ -155,44 +176,27 @@ public class JRebirthPlugin implements Plugin {
 
     }
 
-    @Command(value = "test", help = "Test command")
-    public void testCommand(PipeOut out, @Option(name = "name", shortName = "n") final String name) {
-        MetadataFacet metadata = project.getFacet(MetadataFacet.class);
-        DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
-        String uiPackage = metadata.getTopLevelPackage() + ".ui";
-        out.println("TopLevelPackage = " + uiPackage);
-        if (name != null) {
-            out.println("New Ui Package = " + uiPackage + "." + name.toLowerCase());
-            DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(uiPackage + "." + name.toLowerCase()));
-            if (directory.isDirectory()) {
-                out.println(ShellColor.RED, directory.toString() + " Is already created");
-            } else {
-                out.println(ShellColor.GREEN, directory.toString() + " Is a new folder");
-            }
-        }
-    }
-
     @Command(value = "create-mvc", help = "Create Model,View and Controller for the given name")
-    public void createMVC(PipeOut out, @Option(name = "name", shortName = "n", required = true) final String name) {
+    public void createMVC(PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.") final String name) {
         createFiles(CreatioinType.MVC, name, out);
     }
 
     @Command(value = "create-mv", help = "Create Model and View for the given name")
     public void createMV(PipeOut out,
-            @Option(name = "name", shortName = "n", required = true) final String name) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the MV Group to be created.") final String name) {
 
         createFiles(CreatioinType.MV, name, out);
     }
 
     @Command(value = "create-command", help = "Create a command for the given name")
     public void createCommand(PipeOut out,
-            @Option(name = "name", shortName = "n", required = true) final String commandName) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.") final String commandName) {
         createFiles(CreatioinType.COMMAND, commandName, out);
     }
 
     @Command(value = "create-service", help = "Create a service for the given name")
     public void createService(PipeOut out,
-            @Option(name = "name", shortName = "n", required = true) final String serviceName) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.") final String serviceName) {
 
         createFiles(CreatioinType.SERVICE, serviceName, out);
     }
@@ -200,7 +204,7 @@ public class JRebirthPlugin implements Plugin {
     /* TODO: Need to see how to do this. */
     @Command(value = "create-resource", help = "Create a resource for the given name")
     public void createResource(PipeOut out,
-            @Option(name = "name", shortName = "n", required = true) final String resourceName) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.") final String resourceName) {
         createFiles(CreatioinType.RESOURCE, resourceName, out);
     }
 
