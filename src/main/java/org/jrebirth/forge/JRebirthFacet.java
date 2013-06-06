@@ -1,5 +1,7 @@
 /**
- * Get more info at : www.jrebirth.org . Copyright JRebirth.org © 2011-2013 Contact : sebastien.bordes@jrebirth.org
+ * Get more info at : www.jrebirth.org . 
+ * Copyright JRebirth.org © 2011-2013 
+ * Contact : sebastien.bordes@jrebirth.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -78,7 +80,7 @@ public class JRebirthFacet extends BaseFacet {
         }
         dependencyFacet.addDirectDependency(dependency);
 
-        writer.print(ShellColor.GREEN,  dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
+        writer.println(ShellColor.GREEN,dependency.getArtifactId() +":"+  dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
 
     }
 
