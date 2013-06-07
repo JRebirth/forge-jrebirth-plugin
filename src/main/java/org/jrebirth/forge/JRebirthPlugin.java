@@ -1,17 +1,22 @@
 /**
- * Get more info at : www.jrebirth.org . Copyright JRebirth.org © 2011-2013 Contact : sebastien.bordes@jrebirth.org
+ * Get more info at : www.jrebirth.org . Copyright JRebirth.org © 2011-2013
+ * Contact : sebastien.bordes@jrebirth.org
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package org.jrebirth.forge;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 import javax.inject.Inject;
 import org.jboss.forge.project.Project;
@@ -25,6 +30,9 @@ import org.jboss.forge.shell.plugins.PipeOut;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.plugins.DefaultCommand;
 import javax.enterprise.event.Event;
+import org.jboss.forge.parser.JavaParser;
+import org.jboss.forge.parser.java.JavaClass;
+import org.jboss.forge.parser.java.Method;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
 import org.jboss.forge.project.facets.DependencyFacet;
@@ -59,7 +67,7 @@ public class JRebirthPlugin implements Plugin {
     private JavaSourceFacet javaSourceFacet;
     private DependencyFacet dependencyFacet;
 
-    enum CreatioinType {
+    enum CreationType {
 
         MV, MVC, COMMAND, SERVICE, RESOURCE
     }
@@ -90,7 +98,7 @@ public class JRebirthPlugin implements Plugin {
         }
     }
 
-    private void createUiFiles(CreatioinType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui"));
 
@@ -108,51 +116,111 @@ public class JRebirthPlugin implements Plugin {
             directory.mkdir();
         }
 
-        if (type == CreatioinType.MVC) {
-            //TODO: Create MVC Files
-        } else {
-            //TODO: Create MV Files
-        }
+        try {
+            String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
+            if (!directory.getChild(javaStandardClassName + "Model" + ".java").exists()) {
+                project.getFacet(JavaSourceFacet.class).saveJavaSource(JavaParser.create(JavaClass.class).setPackage(topLevelPackage + ".ui." + name).setName(javaStandardClassName + "Model").getOrigin());
+            } else {
+                out.println(ShellColor.BLUE, "The model class " + javaStandardClassName + "Model already exists");
+            }
+            if (!directory.getChild(javaStandardClassName + "View" + ".java").exists()) {
+                project.getFacet(JavaSourceFacet.class).saveJavaSource(JavaParser.create(JavaClass.class).setPackage(topLevelPackage + ".ui." + name).setName(javaStandardClassName + "View").getOrigin());
+            } else {
+                out.println(ShellColor.BLUE, "The view class " + javaStandardClassName + "View already exists");
+            }
+
+            if (type == CreationType.MVC) {
+                //Create MVC Files
+                if (!directory.getChild(javaStandardClassName + "Controller" + ".java").exists()) {
+                    project.getFacet(JavaSourceFacet.class).saveJavaSource(JavaParser.create(JavaClass.class).setPackage(topLevelPackage + ".ui." + name).setName(javaStandardClassName + "Controller").getOrigin());
+                } else {
+                    out.println(ShellColor.BLUE, "The controller class " + javaStandardClassName + "Controller already exists");
+                }
+            } else {
+                //TODO: Create MV Files                 
+            }
+
+        } catch (FileNotFoundException e) {
+
+            out.println(ShellColor.RED, "Could not create files.");
+        }
     }
 
-    private void createNonUiFiles(CreatioinType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createNonUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = null;
         //  sourceFolder.getChildDirectory(Packages.toFileSyntax("ui." + name.toLowerCase()));
         String fileType = null;
+        JavaClass javaClass = null;
+        // Convert first character to upper case
+        name = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
         switch (type) {
             case COMMAND:
                 directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".command."));
-                if (!directory.isDirectory()) {
-                    fileType = "Command";
+
+                fileType = "Command";
+
+                if (!directory.getChild(name + ".java").exists()) {
+                    javaClass = JavaParser.create(JavaClass.class).setPackage(topLevelPackage + ".command").setName(name).setSuperType("DefaultPoolCommand");
+                    Method executeStub = javaClass.addMethod().setName("execute").setProtected().setReturnTypeVoid().setParameters("final Wave wave").setBody("");
+                    executeStub.addAnnotation("Override");
+                    javaClass.addImport("org.jrebirth.core.command.DefaultPoolCommand");
+                    javaClass.addImport("org.jrebirth.core.wave.Wave");
+                } else {
+                    out.println(ShellColor.BLUE, "The command class " + name + " already exists");
                 }
+
                 break;
             case SERVICE:
                 directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".service."));
-                if (!directory.isDirectory()) {
-                    fileType = "Service";
+
+                fileType = "Service";
+
+                if (!directory.getChild(name + ".java").exists()) {
+                    javaClass = JavaParser.create(JavaClass.class).setPackage(topLevelPackage + ".service").setName(name).setSuperType("ServiceBase");
+                    Method readyStub = javaClass.addMethod().setName("ready").setPublic().setReturnTypeVoid().setBody("").addThrows("CoreException");
+                    readyStub.addAnnotation("Override");
+                    javaClass.addImport("org.jrebirth.core.exception.CoreException");
+                    javaClass.addImport("org.jrebirth.core.service.ServiceBase");
+                } else {
+                    out.println(ShellColor.BLUE, "The service class " + name + " already exists");
                 }
                 break;
             case RESOURCE:
                 directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".resource."));
-                if (!directory.isDirectory()) {
-                    fileType = "Resource";
+
+                fileType = "Resource";
+                if (!directory.getChild(name + ".java").exists()) {
+                    javaClass = JavaParser.create(JavaClass.class).setPackage(topLevelPackage + ".resource").setName(name);
+                } else {
+                    out.println(ShellColor.BLUE, "The resource class " + name + " already exists");
                 }
+
+                break;
+            default:
                 fileType = "";
                 break;
         }
 
-        if (fileType != null) {
+        if (directory != null && !directory.isDirectory()) {
             out.println(ShellColor.BLUE, "The " + fileType + " package is not exists. Creating it.");
             directory.mkdir();
         }
 
-        //TODO: Create Command/Service/Resource File
+        try {
+            //Create Command/Service/Resource File         
+            if (javaClass != null) {
+                project.getFacet(JavaSourceFacet.class).saveJavaSource(javaClass);
+            }
+        } catch (FileNotFoundException ex) {
+            out.println(ShellColor.RED, "Could not create files.");
+        }
+
 
     }
 
-    private void createFiles(CreatioinType type, String name, PipeOut out) {
+    private void createFiles(CreationType type, String name, PipeOut out) {
 
         if (name == null || name.equals("")) {
             out.println(ShellColor.RED, "Provide a proper name.");
@@ -160,6 +228,7 @@ public class JRebirthPlugin implements Plugin {
         }
         MetadataFacet metadata = project.getFacet(MetadataFacet.class);
         DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
+
         switch (type) {
             case MV:
             case MVC:
@@ -178,34 +247,34 @@ public class JRebirthPlugin implements Plugin {
 
     @Command(value = "create-mvc", help = "Create Model,View and Controller for the given name")
     public void createMVC(PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.") final String name) {
-        createFiles(CreatioinType.MVC, name, out);
+        createFiles(CreationType.MVC, name, out);
     }
 
     @Command(value = "create-mv", help = "Create Model and View for the given name")
     public void createMV(PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the MV Group to be created.") final String name) {
 
-        createFiles(CreatioinType.MV, name, out);
+        createFiles(CreationType.MV, name, out);
     }
 
     @Command(value = "create-command", help = "Create a command for the given name")
     public void createCommand(PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.") final String commandName) {
-        createFiles(CreatioinType.COMMAND, commandName, out);
+        createFiles(CreationType.COMMAND, commandName, out);
     }
 
     @Command(value = "create-service", help = "Create a service for the given name")
     public void createService(PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.") final String serviceName) {
 
-        createFiles(CreatioinType.SERVICE, serviceName, out);
+        createFiles(CreationType.SERVICE, serviceName, out);
     }
 
     /* TODO: Need to see how to do this. */
     @Command(value = "create-resource", help = "Create a resource for the given name")
     public void createResource(PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.") final String resourceName) {
-        createFiles(CreatioinType.RESOURCE, resourceName, out);
+        createFiles(CreationType.RESOURCE, resourceName, out);
     }
 
     private static DependencyBuilder jrebirthPresentationDependency() {
