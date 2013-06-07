@@ -103,6 +103,12 @@
       <artifactId>forge-shell</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>velocity</groupId>
+      <artifactId>velocity</artifactId>
+      <version>1.4</version>
+      <type>jar</type>
+    </dependency>
   </dependencies>
   <repositories>
     <repository>

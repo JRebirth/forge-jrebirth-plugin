@@ -1,7 +1,5 @@
 /**
- * Get more info at : www.jrebirth.org . 
- * Copyright JRebirth.org © 2011-2013 
- * Contact : sebastien.bordes@jrebirth.org
+ * Get more info at : www.jrebirth.org . Copyright JRebirth.org © 2011-2013 Contact : sebastien.bordes@jrebirth.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -31,12 +29,11 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  */
 @Alias("org.jrebirth")
-@RequiresFacet({DependencyFacet.class })
+@RequiresFacet({DependencyFacet.class})
 public class JRebirthFacet extends BaseFacet {
 
     @Inject
     private ShellPrompt shell;
-
     private DependencyFacet dependencyFacet;
     @Inject
     private ShellPrintWriter writer;
@@ -46,8 +43,9 @@ public class JRebirthFacet extends BaseFacet {
         dependencyFacet = project.getFacet(DependencyFacet.class);
 
         dependencyFacet.addRepository("JRebirth Maven Repository", "http://repo.jrebirth.org/libs-release");
+        dependencyFacet.addRepository("JRebirth Maven Snapshot Repository", "http://repo.jrebirth.org/libs-snapshot");
 
-        installDependencys(jrebirthCoreDependency(), true);
+        installDependencys(jrebirthCoreDependency(), false);
         installDependencys(javafxDependency(), false);
 
         return true;
@@ -80,12 +78,12 @@ public class JRebirthFacet extends BaseFacet {
         }
         dependencyFacet.addDirectDependency(dependency);
 
-        writer.println(ShellColor.GREEN,dependency.getArtifactId() +":"+  dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
+        writer.println(ShellColor.GREEN, dependency.getArtifactId() + ":" + dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
 
     }
 
     private static DependencyBuilder jrebirthCoreDependency() {
-        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core");
+        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion("0.7.4-SNAPSHOT");
     }
 
     private static DependencyBuilder javafxDependency() {
