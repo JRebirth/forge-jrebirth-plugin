@@ -1,5 +1,19 @@
 package $package;
 
-public class ${ClassName}
+import org.jrebirth.core.exception.CoreException;
+import org.jrebirth.core.ui.DefaultController;
+
+public class ${name}Controller extends DefaultController<${name}Model, ${name}View>
 {
+
+    /**
+     * Instantiates a new question controller.
+     * 
+     * @param view the view
+     * @throws CoreException the core exception
+     */
+    public ${name}Controller(final ${name}View view) throws CoreException 
+    {
+        super(view);
+    }
 }
