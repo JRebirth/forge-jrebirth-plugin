@@ -74,7 +74,7 @@ public class JRebirthPlugin implements Plugin {
 
     enum CreationType {
 
-        MV, MVC, COMMAND, SERVICE, RESOURCE, FXML
+        MV, MVC, COMMAND, SERVICE, RESOURCE, FXML, BEAN
     }
 
     static {
@@ -118,8 +118,14 @@ public class JRebirthPlugin implements Plugin {
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui"));
 
         if (!directory.isDirectory()) {
-            out.println(ShellColor.BLUE, "The UI package is not exists. Creating it.");
+            out.println(ShellColor.BLUE, "The UI package does not exist. Creating it.");
             directory.mkdir();
+        }
+
+        DirectoryResource beansDirectory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".beans"));
+        if (!beansDirectory.isDirectory()) {
+            out.println(ShellColor.BLUE, "The beans package does not exist. Creating it.");
+            beansDirectory.mkdir();
         }
 
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui." + name.toLowerCase()));
@@ -131,19 +137,28 @@ public class JRebirthPlugin implements Plugin {
             directory.mkdir();
         }
 
+
+
         try {
             String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
-            String packageName = topLevelPackage + ".ui." + name.toLowerCase();
+
+            if (!beansDirectory.getChild(javaStandardClassName + ".java").exists()) {
+                generateFile(CreationType.BEAN, javaStandardClassName, "", topLevelPackage);
+
+            } else {
+                out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
+            }
+
 
             if (!directory.getChild(javaStandardClassName + "Model.java").exists()) {
-                generateFile(type, javaStandardClassName + "Model", packageName);
+                generateFile(type, javaStandardClassName, "Model", topLevelPackage);
 
             } else {
                 out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
             }
 
             if (!directory.getChild(javaStandardClassName + "View.java").exists()) {
-                generateFile(type, javaStandardClassName + "View", packageName);
+                generateFile(type, javaStandardClassName, "View", topLevelPackage);
             } else {
                 out.println(ShellColor.RED, "The view class " + javaStandardClassName + " View already exists");
             }
@@ -151,7 +166,7 @@ public class JRebirthPlugin implements Plugin {
             if (type == CreationType.MVC) {
                 //Create MVC Files
                 if (!directory.getChild(javaStandardClassName + "Controller.java").exists()) {
-                    generateFile(type, javaStandardClassName + "Controller", packageName);
+                    generateFile(type, javaStandardClassName, "Controller", topLevelPackage);
                 } else {
                     out.println(ShellColor.RED, "The controller class " + javaStandardClassName + "Controller already exists");
                 }
@@ -161,7 +176,7 @@ public class JRebirthPlugin implements Plugin {
 
             out.println(ShellColor.RED, "Could not create files.");
         } catch (Exception e) {
-            out.println(ShellColor.RED, "Could not create files. Unexpected error occured");            
+            out.println(ShellColor.RED, "Could not create files. Unexpected error occured");
         }
     }
 
@@ -170,7 +185,7 @@ public class JRebirthPlugin implements Plugin {
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui.fxml"));
 
         if (!directory.isDirectory()) {
-            out.println(ShellColor.BLUE, "The FXML UI package is not exists. Creating it.");
+            out.println(ShellColor.BLUE, "The FXML UI package does not exist. Creating it.");
             directory.mkdirs();
         }
 
@@ -194,8 +209,6 @@ public class JRebirthPlugin implements Plugin {
     private void createNonUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = null;
-
-
         String dirSuffix = null;
 
         // Convert first character to upper case
@@ -229,12 +242,12 @@ public class JRebirthPlugin implements Plugin {
                 directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + dirSuffix + "."));
 
                 if (directory != null && !directory.isDirectory()) {
-                    out.println(ShellColor.BLUE, "The " + dirSuffix + " package is not exists. Creating it.");
+                    out.println(ShellColor.BLUE, "The " + dirSuffix + " package does not exist. Creating it.");
                     directory.mkdir();
                 }
 
                 if (directory != null && !directory.getChild(name + ".java").exists()) {
-                    generateFile(type, name, topLevelPackage + dirSuffix);
+                    generateFile(type, name, "", topLevelPackage);
 
                 } else {
                     out.println(ShellColor.RED, "The resource class " + name + " already exists");
@@ -327,32 +340,32 @@ public class JRebirthPlugin implements Plugin {
 
     }
 
-    private void generateFile(CreationType fileType, String className, String packageName) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException, Exception {
+    private void generateFile(CreationType fileType, String name, String suffix, String topLevelPackage) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException, Exception {
 
         JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
         StringWriter writer = new StringWriter();
 
         VelocityContext context = new VelocityContext();
 
-        context.put("ClassName", className);
-        context.put("package", packageName);
-//        context.put("classToTest", "");
-//        context.put("packageImport", "");
+        context.put("name", name);
+        context.put("packageImport", topLevelPackage);
 
         //Check fileType and change template
         switch (fileType) {
             case MV:
             case MVC:
 
-                if (className.endsWith("Model")) {
+                context.put("package", topLevelPackage + ".ui." + name.toLowerCase());
+
+                if (suffix.equals("Model")) {
 
                     Velocity.mergeTemplate("TemplateModel.vtl", "UTF-8", context, writer);
 
-                } else if (className.endsWith("View")) {
+                } else if (suffix.equals("View")) {
 
                     Velocity.mergeTemplate("TemplateView.vtl", "UTF-8", context, writer);
 
-                } else if (className.endsWith("Controller")) {
+                } else if (suffix.equals("Controller")) {
 
                     Velocity.mergeTemplate("TemplateController.vtl", "UTF-8", context, writer);
 
@@ -363,14 +376,20 @@ public class JRebirthPlugin implements Plugin {
 
                 break;
             case COMMAND:
-
+                context.put("package", topLevelPackage + ".command");
                 Velocity.mergeTemplate("TemplateCommand.vtl", "UTF-8", context, writer);
                 break;
             case SERVICE:
+                context.put("package", topLevelPackage + ".service");
                 Velocity.mergeTemplate("TemplateService.vtl", "UTF-8", context, writer);
                 break;
             case RESOURCE:
+                context.put("package", topLevelPackage + ".resource");
                 Velocity.mergeTemplate("TemplateResource.vtl", "UTF-8", context, writer);
+                break;
+            case BEAN:
+                context.put("package", topLevelPackage + ".beans");
+                Velocity.mergeTemplate("TemplateBean.vtl", "UTF-8", context, writer);
                 break;
             default:
                 break;

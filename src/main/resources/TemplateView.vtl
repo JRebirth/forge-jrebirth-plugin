@@ -1,5 +1,27 @@
 package $package;
 
-public class ${ClassName}
+import javafx.scene.Node;
+import org.jrebirth.core.exception.CoreException;
+import org.jrebirth.core.ui.DefaultView;
+
+public class ${name}View extends DefaultView<${name}Model, Node, ${name}Controller> 
 {
+
+    /**
+     * Instantiates a new question view.
+     * 
+     * @param model the model
+     * @throws CoreException the core exception
+     */
+    public ${name}View(final ${name}Model model) throws CoreException {
+        super(model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void initView() 
+    {
+    }
 }
