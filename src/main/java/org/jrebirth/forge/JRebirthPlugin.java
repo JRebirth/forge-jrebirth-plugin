@@ -53,6 +53,7 @@ import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.util.Packages;
 
 /**
+ * The main plugin for JRebirth.
  *
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  */
@@ -62,19 +63,38 @@ import org.jboss.forge.shell.util.Packages;
 @RequiresProject
 public class JRebirthPlugin implements Plugin {
 
+    /** The shell. */
     @Inject
     private ShellPrompt shell;
+    
+    /** The project. */
     @Inject
     private Project project;
+    
+    /** The install. */
     @Inject
     private Event<InstallFacets> install;
+    
+    /** The writer. */
     @Inject
     private ShellPrintWriter writer;
+    
+    /** The dependency facet. */
     private DependencyFacet dependencyFacet;
 
+    /**
+     * The Enum CreationType.
+     */
     enum CreationType {
 
-        MV, MVC, COMMAND, SERVICE, RESOURCE, FXML, BEAN
+        /** The mv. */
+        MV, /** The mvc. */
+ MVC, /** The command. */
+ COMMAND, /** The service. */
+ SERVICE, /** The resource. */
+ RESOURCE, /** The fxml. */
+ FXML, /** The bean. */
+ BEAN
     }
 
     static {
@@ -87,8 +107,14 @@ public class JRebirthPlugin implements Plugin {
 
     }
 
+    /**
+     * The setup command for JRebirth. This adds dependency to the current project
+     *
+     * @param out the out
+     * @param moduleName the module name
+     */
     @SetupCommand(help = "Installs basic setup to work with JRebirth Framework.")
-    public void setup(PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.") final String moduleName) {
+    public void setup(final PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.") final String moduleName) {
         if (moduleName == null) {
             if (!project.hasFacet(JRebirthFacet.class)) {
                 install.fire(new InstallFacets(JRebirthFacet.class));
@@ -99,11 +125,16 @@ public class JRebirthPlugin implements Plugin {
             }
         } else if (moduleName.equalsIgnoreCase("Presentation")) {
 
-            installDependencys(jrebirthPresentationDependency(), true);
+        	installDependencies(jrebirthPresentationDependency(), true);
         }
 
     }
 
+    /**
+     * If jrebirth command is not executed with any argument this method will be called.
+     *
+     * @param out the out
+     */
     @DefaultCommand
     public void defaultCommand(final PipeOut out) {
         if (project.hasFacet(JRebirthFacet.class)) {
@@ -113,6 +144,15 @@ public class JRebirthPlugin implements Plugin {
         }
     }
 
+    /**
+     * Creates Java files for user interface mainly for Model, Controller and View.
+     *
+     * @param type the type
+     * @param topLevelPackage the top level package
+     * @param sourceFolder the source folder
+     * @param name the name
+     * @param out the out
+     */
     private void createUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui"));
@@ -180,6 +220,15 @@ public class JRebirthPlugin implements Plugin {
         }
     }
 
+    /**
+     * Creates FXML and controller files.
+     *
+     * @param type the type
+     * @param topLevelPackage the top level package
+     * @param sourceFolder the source folder
+     * @param name the name
+     * @param out the out
+     */
     private void createUiFxmlFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui.fxml"));
@@ -198,14 +247,17 @@ public class JRebirthPlugin implements Plugin {
             directory.mkdir();
         }
 
-        try {
-            //TODO:  File need to be created
-        } catch (Exception e) {
-
-            out.println(ShellColor.RED, "Could not create files.");
-        }
     }
 
+    /**
+     * Creates Java files for Command, Service etc.
+     *
+     * @param type the type
+     * @param topLevelPackage the top level package
+     * @param sourceFolder the source folder
+     * @param name the name
+     * @param out the out
+     */
     private void createNonUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
 
         DirectoryResource directory = null;
@@ -232,8 +284,7 @@ public class JRebirthPlugin implements Plugin {
 
                     dirSuffix = ".resource";
                     break;
-                default:
-
+                default: ;
                     break;
             }
 
@@ -262,14 +313,18 @@ public class JRebirthPlugin implements Plugin {
 
     }
 
+    /**
+     * Creates the files.
+     *
+     * @param type the type
+     * @param name the name
+     * @param out the out
+     */
     private void createFiles(CreationType type, String name, PipeOut out) {
 
-        if (name == null || name.equals("")) {
-            out.println(ShellColor.RED, "Provide a proper name.");
-            return;
-        }
-        MetadataFacet metadata = project.getFacet(MetadataFacet.class);
-        DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
+       
+        final MetadataFacet metadata = project.getFacet(MetadataFacet.class);
+        final DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
 
         switch (type) {
             case MV:
@@ -290,48 +345,89 @@ public class JRebirthPlugin implements Plugin {
 
     }
 
+    /**
+     * Command to create Model, View and Controller. 
+     *
+     * @param out the out
+     * @param name the name
+     */
     @Command(value = "mvc-create", help = "Create Model,View and Controller for the given name")
-    public void createMVC(PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.") final String name) {
+    public void createMVC(final PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.") final String name) {
         createFiles(CreationType.MVC, name, out);
     }
 
+    /**
+     * Creates the mv.
+     *
+     * @param out the out
+     * @param name the name
+     */
     @Command(value = "mv-create", help = "Create Model and View for the given name")
-    public void createMV(PipeOut out,
+    public void createMV(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the MV Group to be created.") final String name) {
 
         createFiles(CreationType.MV, name, out);
     }
 
+    /**
+     * Creates the command.
+     *
+     * @param out the out
+     * @param commandName the command name
+     */
     @Command(value = "command-create", help = "Create a command for the given name")
-    public void createCommand(PipeOut out,
+    public void createCommand(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.") final String commandName) {
         createFiles(CreationType.COMMAND, commandName, out);
     }
 
+    /**
+     * Creates the service.
+     *
+     * @param out the out
+     * @param serviceName the service name
+     */
     @Command(value = "service-create", help = "Create a service for the given name")
-    public void createService(PipeOut out,
+    public void createService(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.") final String serviceName) {
 
         createFiles(CreationType.SERVICE, serviceName, out);
     }
 
     /* TODO: Need to see how to do this. */
+    /**
+     * Creates the resource.
+     *
+     * @param out the out
+     * @param resourceName the resource name
+     */
     @Command(value = "resource-create", help = "Create a resource for the given name")
-    public void createResource(PipeOut out,
+    public void createResource(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.") final String resourceName) {
         createFiles(CreationType.RESOURCE, resourceName, out);
     }
 
+    /**
+     * Jrebirth presentation dependency.
+     *
+     * @return the dependency builder
+     */
     private static DependencyBuilder jrebirthPresentationDependency() {
         return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("presentation");
     }
 
-    private void installDependencys(DependencyBuilder dependency, boolean askVersion) {
+    /**
+     * Install dependencies.
+     *
+     * @param dependency the dependency
+     * @param askVersion the ask version
+     */
+    private void installDependencies(DependencyBuilder dependency, boolean askVersion) {
         dependencyFacet = project.getFacet(DependencyFacet.class);
 
-        List<Dependency> versions = dependencyFacet.resolveAvailableVersions(dependency);
+        final List<Dependency> versions = dependencyFacet.resolveAvailableVersions(dependency);
         if (askVersion) {
-            Dependency dep = shell.promptChoiceTyped("What version do you want to install?", versions);
+            final Dependency dep = shell.promptChoiceTyped("What version do you want to install?", versions);
             dependency.setVersion(dep.getVersion());
         }
         dependencyFacet.addDirectDependency(dependency);
@@ -340,6 +436,18 @@ public class JRebirthPlugin implements Plugin {
 
     }
 
+    /**
+     * Generate file.
+     *
+     * @param fileType the file type
+     * @param name the name
+     * @param suffix the suffix
+     * @param topLevelPackage the top level package
+     * @throws ResourceNotFoundException the resource not found exception
+     * @throws ParseErrorException the parse error exception
+     * @throws MethodInvocationException the method invocation exception
+     * @throws Exception the exception
+     */
     private void generateFile(CreationType fileType, String name, String suffix, String topLevelPackage) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException, Exception {
 
         JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
