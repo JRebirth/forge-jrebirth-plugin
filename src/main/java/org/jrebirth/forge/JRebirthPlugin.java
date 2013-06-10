@@ -20,18 +20,10 @@ import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Properties;
-import javax.inject.Inject;
-import org.jboss.forge.project.Project;
-import org.jboss.forge.project.facets.events.InstallFacets;
-import org.jboss.forge.shell.ShellPrompt;
-import org.jboss.forge.shell.plugins.Alias;
-import org.jboss.forge.shell.plugins.Command;
-import org.jboss.forge.shell.plugins.Help;
-import org.jboss.forge.shell.plugins.Option;
-import org.jboss.forge.shell.plugins.PipeOut;
-import org.jboss.forge.shell.plugins.SetupCommand;
-import org.jboss.forge.shell.plugins.DefaultCommand;
+
 import javax.enterprise.event.Event;
+import javax.inject.Inject;
+
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.MethodInvocationException;
@@ -39,46 +31,56 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaClass;
+import org.jboss.forge.project.Project;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.MetadataFacet;
+import org.jboss.forge.project.facets.events.InstallFacets;
 import org.jboss.forge.resources.DirectoryResource;
-import org.jboss.forge.shell.plugins.Plugin;
 import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellPrintWriter;
+import org.jboss.forge.shell.ShellPrompt;
+import org.jboss.forge.shell.plugins.Alias;
+import org.jboss.forge.shell.plugins.Command;
+import org.jboss.forge.shell.plugins.DefaultCommand;
+import org.jboss.forge.shell.plugins.Help;
+import org.jboss.forge.shell.plugins.Option;
+import org.jboss.forge.shell.plugins.PipeOut;
+import org.jboss.forge.shell.plugins.Plugin;
 import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
+import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
 
 /**
  * The main plugin for JRebirth.
- *
+ * 
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  */
 @Alias("jrebirth")
 @Help("A Forge addon to enable and work on JRebirth framework.")
-@RequiresFacet({DependencyFacet.class, JavaSourceFacet.class})
+@RequiresFacet({ DependencyFacet.class, JavaSourceFacet.class })
 @RequiresProject
 public class JRebirthPlugin implements Plugin {
 
     /** The shell. */
     @Inject
     private ShellPrompt shell;
-    
+
     /** The project. */
     @Inject
     private Project project;
-    
+
     /** The install. */
     @Inject
     private Event<InstallFacets> install;
-    
+
     /** The writer. */
     @Inject
     private ShellPrintWriter writer;
-    
+
     /** The dependency facet. */
     private DependencyFacet dependencyFacet;
 
@@ -89,19 +91,18 @@ public class JRebirthPlugin implements Plugin {
 
         /** The mv. */
         MV, /** The mvc. */
- MVC, /** The command. */
- COMMAND, /** The service. */
- SERVICE, /** The resource. */
- RESOURCE, /** The fxml. */
- FXML, /** The bean. */
- BEAN
+        MVC, /** The command. */
+        COMMAND, /** The service. */
+        SERVICE, /** The resource. */
+        RESOURCE, /** The fxml. */
+        FXML, /** The bean. */
+        BEAN
     }
 
     static {
-        Properties properties = new Properties();
+        final Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
         properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-
 
         Velocity.init(properties);
 
@@ -109,35 +110,36 @@ public class JRebirthPlugin implements Plugin {
 
     /**
      * The setup command for JRebirth. This adds dependency to the current project
-     *
+     * 
      * @param out the out
      * @param moduleName the module name
      */
     @SetupCommand(help = "Installs basic setup to work with JRebirth Framework.")
-    public void setup(final PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.") final String moduleName) {
+    public void setup(final PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.")
+    final String moduleName) {
         if (moduleName == null) {
-            if (!project.hasFacet(JRebirthFacet.class)) {
-                install.fire(new InstallFacets(JRebirthFacet.class));
+            if (!this.project.hasFacet(JRebirthFacet.class)) {
+                this.install.fire(new InstallFacets(JRebirthFacet.class));
             }
 
-            if (project.hasFacet(JRebirthFacet.class)) {
-                writer.println(ShellColor.GREEN, "JRebirth is configured.");
+            if (this.project.hasFacet(JRebirthFacet.class)) {
+                this.writer.println(ShellColor.GREEN, "JRebirth is configured.");
             }
         } else if (moduleName.equalsIgnoreCase("Presentation")) {
 
-        	installDependencies(jrebirthPresentationDependency(), true);
+            installDependencies(jrebirthPresentationDependency(), true);
         }
 
     }
 
     /**
      * If jrebirth command is not executed with any argument this method will be called.
-     *
+     * 
      * @param out the out
      */
     @DefaultCommand
     public void defaultCommand(final PipeOut out) {
-        if (project.hasFacet(JRebirthFacet.class)) {
+        if (this.project.hasFacet(JRebirthFacet.class)) {
             out.println("JRebirth is installed.");
         } else {
             out.println("JRebirth is not installed. Use 'jrebirth setup' to install.");
@@ -146,14 +148,14 @@ public class JRebirthPlugin implements Plugin {
 
     /**
      * Creates Java files for user interface mainly for Model, Controller and View.
-     *
+     * 
      * @param type the type
      * @param topLevelPackage the top level package
      * @param sourceFolder the source folder
      * @param name the name
      * @param out the out
      */
-    private void createUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, final String name, final PipeOut out) {
 
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui"));
 
@@ -162,7 +164,7 @@ public class JRebirthPlugin implements Plugin {
             directory.mkdir();
         }
 
-        DirectoryResource beansDirectory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".beans"));
+        final DirectoryResource beansDirectory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".beans"));
         if (!beansDirectory.isDirectory()) {
             out.println(ShellColor.BLUE, "The beans package does not exist. Creating it.");
             beansDirectory.mkdir();
@@ -177,10 +179,8 @@ public class JRebirthPlugin implements Plugin {
             directory.mkdir();
         }
 
-
-
         try {
-            String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
+            final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
             if (!beansDirectory.getChild(javaStandardClassName + ".java").exists()) {
                 generateFile(CreationType.BEAN, javaStandardClassName, "", topLevelPackage);
@@ -188,7 +188,6 @@ public class JRebirthPlugin implements Plugin {
             } else {
                 out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
             }
-
 
             if (!directory.getChild(javaStandardClassName + "Model.java").exists()) {
                 generateFile(type, javaStandardClassName, "Model", topLevelPackage);
@@ -204,7 +203,7 @@ public class JRebirthPlugin implements Plugin {
             }
 
             if (type == CreationType.MVC) {
-                //Create MVC Files
+                // Create MVC Files
                 if (!directory.getChild(javaStandardClassName + "Controller.java").exists()) {
                     generateFile(type, javaStandardClassName, "Controller", topLevelPackage);
                 } else {
@@ -212,24 +211,24 @@ public class JRebirthPlugin implements Plugin {
                 }
             }
 
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
 
             out.println(ShellColor.RED, "Could not create files.");
-        } catch (Exception e) {
+        } catch (final Exception e) {
             out.println(ShellColor.RED, "Could not create files. Unexpected error occured");
         }
     }
 
     /**
      * Creates FXML and controller files.
-     *
+     * 
      * @param type the type
      * @param topLevelPackage the top level package
      * @param sourceFolder the source folder
      * @param name the name
      * @param out the out
      */
-    private void createUiFxmlFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createUiFxmlFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, final String name, final PipeOut out) {
 
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + ".ui.fxml"));
 
@@ -251,14 +250,14 @@ public class JRebirthPlugin implements Plugin {
 
     /**
      * Creates Java files for Command, Service etc.
-     *
+     * 
      * @param type the type
      * @param topLevelPackage the top level package
      * @param sourceFolder the source folder
      * @param name the name
      * @param out the out
      */
-    private void createNonUiFiles(CreationType type, String topLevelPackage, DirectoryResource sourceFolder, String name, PipeOut out) {
+    private void createNonUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, String name, final PipeOut out) {
 
         DirectoryResource directory = null;
         String dirSuffix = null;
@@ -284,7 +283,8 @@ public class JRebirthPlugin implements Plugin {
 
                     dirSuffix = ".resource";
                     break;
-                default: ;
+                default:
+                    ;
                     break;
             }
 
@@ -306,7 +306,7 @@ public class JRebirthPlugin implements Plugin {
 
             }
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             out.println(ShellColor.RED, "Could not create files.");
 
         }
@@ -315,16 +315,15 @@ public class JRebirthPlugin implements Plugin {
 
     /**
      * Creates the files.
-     *
+     * 
      * @param type the type
      * @param name the name
      * @param out the out
      */
-    private void createFiles(CreationType type, String name, PipeOut out) {
+    private void createFiles(final CreationType type, final String name, final PipeOut out) {
 
-       
-        final MetadataFacet metadata = project.getFacet(MetadataFacet.class);
-        final DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
+        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
+        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
 
         switch (type) {
             case MV:
@@ -346,50 +345,54 @@ public class JRebirthPlugin implements Plugin {
     }
 
     /**
-     * Command to create Model, View and Controller. 
-     *
+     * Command to create Model, View and Controller.
+     * 
      * @param out the out
      * @param name the name
      */
     @Command(value = "mvc-create", help = "Create Model,View and Controller for the given name")
-    public void createMVC(final PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.") final String name) {
+    public void createMVC(final PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.")
+    final String name) {
         createFiles(CreationType.MVC, name, out);
     }
 
     /**
      * Creates the mv.
-     *
+     * 
      * @param out the out
      * @param name the name
      */
     @Command(value = "mv-create", help = "Create Model and View for the given name")
     public void createMV(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the MV Group to be created.") final String name) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the MV Group to be created.")
+            final String name) {
 
         createFiles(CreationType.MV, name, out);
     }
 
     /**
      * Creates the command.
-     *
+     * 
      * @param out the out
      * @param commandName the command name
      */
     @Command(value = "command-create", help = "Create a command for the given name")
     public void createCommand(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.") final String commandName) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.")
+            final String commandName) {
         createFiles(CreationType.COMMAND, commandName, out);
     }
 
     /**
      * Creates the service.
-     *
+     * 
      * @param out the out
      * @param serviceName the service name
      */
     @Command(value = "service-create", help = "Create a service for the given name")
     public void createService(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.") final String serviceName) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.")
+            final String serviceName) {
 
         createFiles(CreationType.SERVICE, serviceName, out);
     }
@@ -397,19 +400,20 @@ public class JRebirthPlugin implements Plugin {
     /* TODO: Need to see how to do this. */
     /**
      * Creates the resource.
-     *
+     * 
      * @param out the out
      * @param resourceName the resource name
      */
     @Command(value = "resource-create", help = "Create a resource for the given name")
     public void createResource(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.") final String resourceName) {
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.")
+            final String resourceName) {
         createFiles(CreationType.RESOURCE, resourceName, out);
     }
 
     /**
      * Jrebirth presentation dependency.
-     *
+     * 
      * @return the dependency builder
      */
     private static DependencyBuilder jrebirthPresentationDependency() {
@@ -418,27 +422,27 @@ public class JRebirthPlugin implements Plugin {
 
     /**
      * Install dependencies.
-     *
+     * 
      * @param dependency the dependency
      * @param askVersion the ask version
      */
-    private void installDependencies(DependencyBuilder dependency, boolean askVersion) {
-        dependencyFacet = project.getFacet(DependencyFacet.class);
+    private void installDependencies(final DependencyBuilder dependency, final boolean askVersion) {
+        this.dependencyFacet = this.project.getFacet(DependencyFacet.class);
 
-        final List<Dependency> versions = dependencyFacet.resolveAvailableVersions(dependency);
+        final List<Dependency> versions = this.dependencyFacet.resolveAvailableVersions(dependency);
         if (askVersion) {
-            final Dependency dep = shell.promptChoiceTyped("What version do you want to install?", versions);
+            final Dependency dep = this.shell.promptChoiceTyped("What version do you want to install?", versions);
             dependency.setVersion(dep.getVersion());
         }
-        dependencyFacet.addDirectDependency(dependency);
+        this.dependencyFacet.addDirectDependency(dependency);
 
-        writer.println(ShellColor.GREEN, dependency.getGroupId() + ":" + dependency.getArtifactId() + ":" + dependency.getVersion() + " is added to the dependency.");
+        this.writer.println(ShellColor.GREEN, dependency.getGroupId() + ":" + dependency.getArtifactId() + ":" + dependency.getVersion() + " is added to the dependency.");
 
     }
 
     /**
      * Generate file.
-     *
+     * 
      * @param fileType the file type
      * @param name the name
      * @param suffix the suffix
@@ -448,17 +452,18 @@ public class JRebirthPlugin implements Plugin {
      * @throws MethodInvocationException the method invocation exception
      * @throws Exception the exception
      */
-    private void generateFile(CreationType fileType, String name, String suffix, String topLevelPackage) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException, Exception {
+    private void generateFile(final CreationType fileType, final String name, final String suffix, final String topLevelPackage) throws ResourceNotFoundException, ParseErrorException,
+            MethodInvocationException, Exception {
 
-        JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
-        StringWriter writer = new StringWriter();
+        final JavaSourceFacet java = this.project.getFacet(JavaSourceFacet.class);
+        final StringWriter writer = new StringWriter();
 
-        VelocityContext context = new VelocityContext();
+        final VelocityContext context = new VelocityContext();
 
         context.put("name", name);
         context.put("packageImport", topLevelPackage);
 
-        //Check fileType and change template
+        // Check fileType and change template
         switch (fileType) {
             case MV:
             case MVC:
@@ -503,7 +508,7 @@ public class JRebirthPlugin implements Plugin {
                 break;
         }
 
-        JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
+        final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
         java.saveJavaSource(javaClass);
 
     }

@@ -1,8 +1,8 @@
 package org.jrebirth.forge;
 
-import javax.inject.Inject;
+import static junit.framework.Assert.assertNotNull;
 
-import static junit.framework.Assert.*;
+import javax.inject.Inject;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.forge.project.Project;
@@ -26,7 +26,7 @@ public class JRebirthPluginTest extends AbstractShellTest {
     }
 
     private Project initializeJRebirthFacesProject() throws Exception {
-        Project p = initializeJavaProject();
+        final Project p = initializeJavaProject();
 
         queueInputLines("9");
         getShell().execute("rebirth setup");
@@ -39,7 +39,7 @@ public class JRebirthPluginTest extends AbstractShellTest {
         initializeJRebirthFacesProject();
         final Project project = initializeJRebirthFacesProject();
 
-        assertNotNull(resolver);
+        assertNotNull(this.resolver);
 
         assertNotNull(project.hasFacet(JRebirthFacet.class));
 
@@ -50,20 +50,20 @@ public class JRebirthPluginTest extends AbstractShellTest {
 
         initializeJRebirthFacesProject();
         final Project project = initializeJRebirthFacesProject();
-        MetadataFacet metadata = project.getFacet(MetadataFacet.class);
+        final MetadataFacet metadata = project.getFacet(MetadataFacet.class);
 
         getShell().execute("rebirth create-mv --name Student");
 
-        DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
-        DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(metadata.getTopLevelPackage() + ".ui.raj"));
+        final DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
+        final DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(metadata.getTopLevelPackage() + ".ui.raj"));
 
-        System.out.println(this.getShell().getCurrentResource().getParent().getName());
+        System.out.println(getShell().getCurrentResource().getParent().getName());
         System.out.println(metadata.getTopLevelPackage());
         System.out.println(sourceFolder.toString());
         System.out.println(directory.isDirectory());
         System.out.println(directory.getFullyQualifiedName());
-        
-      //  assertTrue(directory.isDirectory());
+
+        // assertTrue(directory.isDirectory());
 
     }
 }

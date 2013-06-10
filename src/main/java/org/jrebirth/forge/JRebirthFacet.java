@@ -13,48 +13,52 @@
 package org.jrebirth.forge;
 
 import java.util.List;
+
 import javax.inject.Inject;
+
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
 import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
-import org.jboss.forge.shell.ShellPrompt;
-import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellPrintWriter;
+import org.jboss.forge.shell.ShellPrompt;
+import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
 
 // TODO: Auto-generated Javadoc
 /**
  * JRebirth Facet
- *
- *
+ * 
+ * 
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  */
 @Alias("org.jrebirth")
-@RequiresFacet({DependencyFacet.class})
+@RequiresFacet({ DependencyFacet.class })
 public class JRebirthFacet extends BaseFacet {
 
     /** The shell. */
     @Inject
     private ShellPrompt shell;
-    
+
     /** The dependency facet. */
     private DependencyFacet dependencyFacet;
-    
+
     /** The writer. */
     @Inject
     private ShellPrintWriter writer;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.jboss.forge.project.Facet#install()
      */
     @Override
     public boolean install() {
-        dependencyFacet = project.getFacet(DependencyFacet.class);
+        this.dependencyFacet = this.project.getFacet(DependencyFacet.class);
 
-        dependencyFacet.addRepository("JRebirth Maven Repository", "http://repo.jrebirth.org/libs-release");
-        dependencyFacet.addRepository("JRebirth Maven Snapshot Repository", "http://repo.jrebirth.org/libs-snapshot");
+        this.dependencyFacet.addRepository("JRebirth Maven Repository", "http://repo.jrebirth.org/libs-release");
+        this.dependencyFacet.addRepository("JRebirth Maven Snapshot Repository", "http://repo.jrebirth.org/libs-snapshot");
 
         installDependencies(jrebirthCoreDependency(), false);
         installDependencies(javafxDependency(), false);
@@ -62,52 +66,56 @@ public class JRebirthFacet extends BaseFacet {
         return true;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.jboss.forge.project.Facet#isInstalled()
      */
     @Override
     public boolean isInstalled() {
-        if (project.hasFacet(JRebirthFacet.class)) {
+        if (this.project.hasFacet(JRebirthFacet.class)) {
             return true;
         }
 
         return false;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.jboss.forge.project.facets.BaseFacet#uninstall()
      */
     @Override
     public boolean uninstall() {
-        dependencyFacet = project.getFacet(DependencyFacet.class);
-        dependencyFacet.removeDependency(jrebirthCoreDependency());
-        dependencyFacet.removeDependency(javafxDependency());
-        dependencyFacet.removeRepository("JRebirth Maven Repository");
+        this.dependencyFacet = this.project.getFacet(DependencyFacet.class);
+        this.dependencyFacet.removeDependency(jrebirthCoreDependency());
+        this.dependencyFacet.removeDependency(javafxDependency());
+        this.dependencyFacet.removeRepository("JRebirth Maven Repository");
         return true;
     }
 
     /**
      * Method to install the specified Dependencies into the project.
-     *
+     * 
      * @param dependency the dependency
      * @param askVersion Version of the dependency
      */
     private void installDependencies(final DependencyBuilder dependency, final boolean askVersion) {
 
-        List<Dependency> versions = dependencyFacet.resolveAvailableVersions(dependency);
+        final List<Dependency> versions = this.dependencyFacet.resolveAvailableVersions(dependency);
         if (askVersion) {
-            Dependency dep = shell.promptChoiceTyped("What version do you want to install?", versions);
+            final Dependency dep = this.shell.promptChoiceTyped("What version do you want to install?", versions);
             dependency.setVersion(dep.getVersion());
         }
-        dependencyFacet.addDirectDependency(dependency);
+        this.dependencyFacet.addDirectDependency(dependency);
 
-        writer.println(ShellColor.GREEN, dependency.getArtifactId() + ":" + dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
+        this.writer.println(ShellColor.GREEN, dependency.getArtifactId() + ":" + dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
 
     }
 
     /**
      * Jrebirth core dependency.
-     *
+     * 
      * @return the dependency builder
      */
     private static DependencyBuilder jrebirthCoreDependency() {
@@ -116,7 +124,7 @@ public class JRebirthFacet extends BaseFacet {
 
     /**
      * Javafx dependency.
-     *
+     * 
      * @return the dependency builder
      */
     private static DependencyBuilder javafxDependency() {
