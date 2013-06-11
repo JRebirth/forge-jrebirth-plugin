@@ -13,6 +13,7 @@
 package org.jrebirth.forge.utils;
 
 import java.util.List;
+import java.util.ResourceBundle;
 
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.dependencies.Dependency;
@@ -23,28 +24,29 @@ import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 
 /**
- * JRebirth Constants 
- * 
+ * JRebirth Constants.
  * 
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  */
-public class Constants {
-    
+public final class Constants {
+
     /** The Constant TEMPLATE_KEY_PACKAGE. */
     public static final String TEMPLATE_KEY_PACKAGE = "package";
-    
+
     /** The Constant TEMPLATE_KEY_NAME. */
     public static final String TEMPLATE_KEY_NAME = "name";
-    
+
     /** The Constant TEMPLATE_KEY_PACKAGEIMPORT. */
     public static final String TEMPLATE_KEY_PACKAGEIMPORT = "packageImport";
-    
+
     /** The Constant TEMPLATE_UNICODE. */
     public static final String TEMPLATE_UNICODE = "UTF-8";
-    
+
     /** The Constant PACKAGE_DELIMITER. */
     public static final String PACKAGE_DELIMITER = ".";
-        
+
+    public static ResourceBundle resourceBundle = ResourceBundle.getBundle("ResourceBundle");
+
     /**
      * The Enum CreationType.
      */
@@ -59,37 +61,71 @@ public class Constants {
         FXML(".ui.fxml"), /** The bean. */
         BEAN(".beans");
 
-       private String packageName;
+        /** The package name. */
+        private String packageName;
 
+        /**
+         * Instantiates a new creation type.
+         * 
+         * @param packageName the package name
+         */
         private CreationType(final String packageName) {
             this.packageName = packageName;
         }
 
+        /**
+         * Gets the package name.
+         * 
+         * @return the package name
+         */
         public String getPackageName() {
             return this.packageName;
         }
     }
-    
+
+    /** Private constructor */
+    private Constants() {
+    }
+
     /**
      * Jrebirth presentation dependency.
-     *
+     * 
      * @return the dependency builder
      */
     public static DependencyBuilder jrebirthPresentationDependency() {
         return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("presentation");
     }
-      
+
+    /**
+     * Jrebirth core dependency.
+     * 
+     * @return the dependency builder
+     */
+    public static DependencyBuilder jrebirthCoreDependency() {
+        System.out.println(resourceBundle.getString("presentationModuleVersion"));
+        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion("0.7.4-SNAPSHOT");
+    }
+
+    /**
+     * Javafx dependency.
+     * 
+     * @return the dependency builder
+     */
+    public static DependencyBuilder javafxDependency() {
+        return DependencyBuilder.create().setGroupId("javafx").setArtifactId("jfxrt").setVersion("2.2").
+                setScopeType("system").setSystemPath("${java.home}/lib/jfxrt.jar");
+    }
 
     /**
      * Install dependencies.
-     *
+     * 
      * @param project the project
      * @param shell the shell
      * @param writer the writer
      * @param dependency the dependency
      * @param askVersion the ask version
      */
-    public static void installDependencies(final Project project, final ShellPrompt shell,final  ShellPrintWriter writer, final DependencyBuilder dependency, final boolean askVersion) {
+    public static void installDependencies(final Project project, final ShellPrompt shell, final ShellPrintWriter writer, final DependencyBuilder dependency, final boolean askVersion) {
         DependencyFacet dependencyFacet;
         dependencyFacet = project.getFacet(DependencyFacet.class);
 
@@ -103,6 +139,5 @@ public class Constants {
         writer.println(ShellColor.GREEN, dependency.getGroupId() + ":" + dependency.getArtifactId() + ":" + dependency.getVersion() + " is added to the dependency.");
 
     }
-    
 
 }

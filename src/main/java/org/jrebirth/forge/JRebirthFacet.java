@@ -12,22 +12,17 @@
  */
 package org.jrebirth.forge;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
-import org.jboss.forge.project.dependencies.Dependency;
-import org.jboss.forge.project.dependencies.DependencyBuilder;
 import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
-import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
-import org.jrebirth.forge.utils.Constants;
 
-// TODO: Auto-generated Javadoc
+import static org.jrebirth.forge.utils.Constants.*;
+
 /**
  * JRebirth Facet
  * 
@@ -60,9 +55,9 @@ public class JRebirthFacet extends BaseFacet {
 
         this.dependencyFacet.addRepository("JRebirth Maven Repository", "http://repo.jrebirth.org/libs-release");
         this.dependencyFacet.addRepository("JRebirth Maven Snapshot Repository", "http://repo.jrebirth.org/libs-snapshot");
-        
-        Constants.installDependencies(project, shell, writer, jrebirthCoreDependency(), false);
-        Constants.installDependencies(project, shell, writer, javafxDependency(), false);
+
+        installDependencies(project, shell, writer, jrebirthCoreDependency(), false);
+        installDependencies(project, shell, writer, javafxDependency(), false);
 
         return true;
     }
@@ -95,23 +90,4 @@ public class JRebirthFacet extends BaseFacet {
         return true;
     }
 
-   
-    /**
-     * Jrebirth core dependency.
-     * 
-     * @return the dependency builder
-     */
-    private static DependencyBuilder jrebirthCoreDependency() {
-        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion("0.7.4-SNAPSHOT");
-    }
-
-    /**
-     * Javafx dependency.
-     * 
-     * @return the dependency builder
-     */
-    private static DependencyBuilder javafxDependency() {
-        return DependencyBuilder.create().setGroupId("javafx").setArtifactId("jfxrt").setVersion("2.2").
-                setScopeType("system").setSystemPath("${java.home}/lib/jfxrt.jar");
-    }
 }
