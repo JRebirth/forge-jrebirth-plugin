@@ -26,8 +26,6 @@ import javax.inject.Inject;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaClass;
@@ -51,8 +49,10 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import static org.jrebirth.forge.utils.Constants.*;
-import static org.jrebirth.forge.utils.Constants.CreationType;
 
 /**
  * The main plugin for JRebirth.
@@ -80,7 +80,8 @@ public class JRebirthPlugin implements Plugin {
     /** The writer. */
     @Inject
     private ShellPrintWriter writer;
-
+    
+    
     static {
         final Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
@@ -149,7 +150,7 @@ public class JRebirthPlugin implements Plugin {
             beansDirectory.mkdir();
         }
 
-        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase()));
+        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
 
         if (directory.isDirectory()) {
             out.println(ShellColor.RED, "Unable to Create package. The package '" + directory.toString() + "' is already found");
@@ -158,43 +159,35 @@ public class JRebirthPlugin implements Plugin {
             directory.mkdir();
         }
 
-        try {
-            final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
+        final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
-            if (!beansDirectory.getChild(javaStandardClassName + ".java").exists()) {
-                generateFile(CreationType.BEAN, javaStandardClassName, "", topLevelPackage);
+        if (!beansDirectory.getChild(javaStandardClassName + ".java").exists()) {
+            generateFile(CreationType.BEAN, javaStandardClassName, "", topLevelPackage);
 
+        } else {
+            out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
+        }
+
+        if (!directory.getChild(javaStandardClassName + "Model.java").exists()) {
+            generateFile(type, javaStandardClassName, "Model", topLevelPackage);
+
+        } else {
+            out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
+        }
+
+        if (!directory.getChild(javaStandardClassName + "View.java").exists()) {
+            generateFile(type, javaStandardClassName, "View", topLevelPackage);
+        } else {
+            out.println(ShellColor.RED, "The view class " + javaStandardClassName + " View already exists");
+        }
+
+        if (type == CreationType.MVC) {
+            // Create MVC Files
+            if (!directory.getChild(javaStandardClassName + "Controller.java").exists()) {
+                generateFile(type, javaStandardClassName, "Controller", topLevelPackage);
             } else {
-                out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
+                out.println(ShellColor.RED, "The controller class " + javaStandardClassName + "Controller already exists");
             }
-
-            if (!directory.getChild(javaStandardClassName + "Model.java").exists()) {
-                generateFile(type, javaStandardClassName, "Model", topLevelPackage);
-
-            } else {
-                out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
-            }
-
-            if (!directory.getChild(javaStandardClassName + "View.java").exists()) {
-                generateFile(type, javaStandardClassName, "View", topLevelPackage);
-            } else {
-                out.println(ShellColor.RED, "The view class " + javaStandardClassName + " View already exists");
-            }
-
-            if (type == CreationType.MVC) {
-                // Create MVC Files
-                if (!directory.getChild(javaStandardClassName + "Controller.java").exists()) {
-                    generateFile(type, javaStandardClassName, "Controller", topLevelPackage);
-                } else {
-                    out.println(ShellColor.RED, "The controller class " + javaStandardClassName + "Controller already exists");
-                }
-            }
-
-        } catch (final FileNotFoundException e) {
-
-            out.println(ShellColor.RED, "Could not create files.");
-        } catch (final Exception e) {
-            out.println(ShellColor.RED, "Could not create files. Unexpected error occured");
         }
     }
 
@@ -235,16 +228,16 @@ public class JRebirthPlugin implements Plugin {
      * @param name the name
      * @param out the out
      */
-    private void createNonUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, String name, final PipeOut out) {
+    private void createNonUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, final String fileName, final PipeOut out) {
 
         DirectoryResource directory = null;
-
+        String finalName = "";
         // Convert first character to upper case
-        name = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
+        finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
         try {
 
-            if (!"service".contains(name) && !"Service".contains(name)) {
-                name = name.concat("Service");
+            if (!"service".contains(finalName) && !"Service".contains(finalName)) {
+                finalName = finalName.concat("Service");
             }
 
             directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "."));
@@ -254,11 +247,11 @@ public class JRebirthPlugin implements Plugin {
                 directory.mkdir();
             }
 
-            if (directory != null && !directory.getChild(name + ".java").exists()) {
-                generateFile(type, name, "", topLevelPackage);
+            if (directory != null && directory.getChild(finalName + ".java").exists() == false) {
+                generateFile(type, finalName, "", topLevelPackage);
 
             } else {
-                out.println(ShellColor.RED, "The resource class " + name + " already exists");
+                out.println(ShellColor.RED, "The resource class " + finalName + " already exists");
             }
 
         } catch (final Exception e) {
@@ -361,7 +354,6 @@ public class JRebirthPlugin implements Plugin {
         createFiles(CreationType.SERVICE, serviceName, out);
     }
 
-    /* TODO: Need to see how to do this. */
     /**
      * Creates the resource.
      * 
@@ -387,8 +379,8 @@ public class JRebirthPlugin implements Plugin {
      * @throws MethodInvocationException the method invocation exception
      * @throws Exception the exception
      */
-    private void generateFile(final CreationType fileType, final String name, final String suffix, final String topLevelPackage) throws ResourceNotFoundException,
-            Exception {
+    private void generateFile(final CreationType fileType, final String name, final String suffix, final String topLevelPackage) throws ResourceNotFoundException
+    {
 
         final JavaSourceFacet java = this.project.getFacet(JavaSourceFacet.class);
         final StringWriter writer = new StringWriter();
@@ -402,17 +394,17 @@ public class JRebirthPlugin implements Plugin {
             case MV:
             case MVC:
 
-                context.put("package", topLevelPackage + fileType.getPackageName() + "." + name.toLowerCase());
+                context.put("package", topLevelPackage + fileType.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
 
-                if (suffix.equals("Model")) {
+                if ("Model".equals(suffix)) {
 
                     Velocity.mergeTemplate("TemplateModel.vtl", TEMPLATE_UNICODE, context, writer);
 
-                } else if (suffix.equals("View")) {
+                } else if ("View".equals(suffix)) {
 
                     Velocity.mergeTemplate("TemplateView.vtl", TEMPLATE_UNICODE, context, writer);
 
-                } else if (suffix.equals("Controller")) {
+                } else if ("Controller".equals(suffix)) {
 
                     Velocity.mergeTemplate("TemplateController.vtl", TEMPLATE_UNICODE, context, writer);
 
@@ -443,7 +435,11 @@ public class JRebirthPlugin implements Plugin {
         }
 
         final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
-        java.saveJavaSource(javaClass);
+        try {
+            java.saveJavaSource(javaClass);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
 }
