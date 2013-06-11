@@ -25,6 +25,7 @@ import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
+import org.jrebirth.forge.utils.Constants;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -59,9 +60,9 @@ public class JRebirthFacet extends BaseFacet {
 
         this.dependencyFacet.addRepository("JRebirth Maven Repository", "http://repo.jrebirth.org/libs-release");
         this.dependencyFacet.addRepository("JRebirth Maven Snapshot Repository", "http://repo.jrebirth.org/libs-snapshot");
-
-        installDependencies(jrebirthCoreDependency(), false);
-        installDependencies(javafxDependency(), false);
+        
+        Constants.installDependencies(project, shell, writer, jrebirthCoreDependency(), false);
+        Constants.installDependencies(project, shell, writer, javafxDependency(), false);
 
         return true;
     }
@@ -94,25 +95,7 @@ public class JRebirthFacet extends BaseFacet {
         return true;
     }
 
-    /**
-     * Method to install the specified Dependencies into the project.
-     * 
-     * @param dependency the dependency
-     * @param askVersion Version of the dependency
-     */
-    private void installDependencies(final DependencyBuilder dependency, final boolean askVersion) {
-
-        final List<Dependency> versions = this.dependencyFacet.resolveAvailableVersions(dependency);
-        if (askVersion) {
-            final Dependency dep = this.shell.promptChoiceTyped("What version do you want to install?", versions);
-            dependency.setVersion(dep.getVersion());
-        }
-        this.dependencyFacet.addDirectDependency(dependency);
-
-        this.writer.println(ShellColor.GREEN, dependency.getArtifactId() + ":" + dependency.getGroupId() + ":" + dependency.getVersion() + " is added to the dependency.");
-
-    }
-
+   
     /**
      * Jrebirth core dependency.
      * 
