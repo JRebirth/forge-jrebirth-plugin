@@ -16,19 +16,20 @@
  */
 package org.jrebirth.forge;
 
-import java.io.FileNotFoundException;
-import java.io.StringWriter;
+import static org.jrebirth.forge.utils.Constants.createPackageIfNotExist;
+import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
+import static org.jrebirth.forge.utils.Constants.installDependencies;
+import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
+import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
+
+
 import java.util.Locale;
 import java.util.Properties;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.jboss.forge.parser.JavaParser;
-import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
@@ -36,7 +37,6 @@ import org.jboss.forge.project.facets.MetadataFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
 import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.ShellColor;
-import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.Command;
@@ -49,10 +49,7 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
-
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import static org.jrebirth.forge.utils.Constants.*;
+import org.jrebirth.forge.utils.Constants.CreationType;
 
 /**
  * The main plugin for JRebirth.
@@ -77,11 +74,7 @@ public class JRebirthPlugin implements Plugin {
     @Inject
     private Event<InstallFacets> install;
 
-    /** The writer. */
-    @Inject
-    private ShellPrintWriter writer;
-    
-    
+
     static {
         final Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
@@ -98,17 +91,15 @@ public class JRebirthPlugin implements Plugin {
     @SetupCommand(help = "Installs basic setup to work with JRebirth Framework.")
     public void setup(final PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.")
     final String moduleName) {
-        if (moduleName == null) {
-            if (!this.project.hasFacet(JRebirthFacet.class)) {
-                this.install.fire(new InstallFacets(JRebirthFacet.class));
-            }
 
-            if (this.project.hasFacet(JRebirthFacet.class)) {
-                this.writer.println(ShellColor.GREEN, "JRebirth is configured.");
-            }
-        } else if ("Presentation".equalsIgnoreCase(moduleName)) {
+        if (!this.project.hasFacet(JRebirthFacet.class)) {
+            this.install.fire(new InstallFacets(JRebirthFacet.class));
+        }
+        if (moduleName != null) {
+            if ("Presentation".equalsIgnoreCase(moduleName)) {
 
-            installDependencies(this.project, this.shell, out, jrebirthPresentationDependency(), true);
+                installDependencies(this.project, this.shell, out, jrebirthPresentationDependency(), true);
+            }
         }
     }
 
@@ -139,55 +130,30 @@ public class JRebirthPlugin implements Plugin {
 
         DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName()));
 
-        if (!directory.isDirectory()) {
-            out.println(ShellColor.BLUE, "The UI package does not exist. Creating it.");
-            directory.mkdir();
-        }
+        createPackageIfNotExist(directory, "UI", out);
 
         final DirectoryResource beansDirectory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.BEAN.getPackageName()));
-        if (!beansDirectory.isDirectory()) {
-            out.println(ShellColor.BLUE, "The beans package does not exist. Creating it.");
-            beansDirectory.mkdir();
-        }
+
+        createPackageIfNotExist(beansDirectory, "beans", out);
 
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
 
-        if (directory.isDirectory()) {
-            out.println(ShellColor.RED, "Unable to Create package. The package '" + directory.toString() + "' is already found");
-            return;
-        } else {
-            directory.mkdir();
-        }
+        determinePackageAvailability(directory, out);
 
         final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
-        if (!beansDirectory.getChild(javaStandardClassName + ".java").exists()) {
-            generateFile(CreationType.BEAN, javaStandardClassName, "", topLevelPackage);
+       
+        determineFileAvailabilty(project,beansDirectory,CreationType.BEAN,javaStandardClassName,topLevelPackage,out,"",".java");
+        
+        determineFileAvailabilty(project,directory,type,javaStandardClassName,topLevelPackage,out,"Model","Model.java");
+                
+        determineFileAvailabilty(project,directory,type,javaStandardClassName,topLevelPackage,out,"View","View.java");
 
-        } else {
-            out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
-        }
-
-        if (!directory.getChild(javaStandardClassName + "Model.java").exists()) {
-            generateFile(type, javaStandardClassName, "Model", topLevelPackage);
-
-        } else {
-            out.println(ShellColor.RED, "The model class " + javaStandardClassName + " Model already exists");
-        }
-
-        if (!directory.getChild(javaStandardClassName + "View.java").exists()) {
-            generateFile(type, javaStandardClassName, "View", topLevelPackage);
-        } else {
-            out.println(ShellColor.RED, "The view class " + javaStandardClassName + " View already exists");
-        }
-
+    
         if (type == CreationType.MVC) {
-            // Create MVC Files
-            if (!directory.getChild(javaStandardClassName + "Controller.java").exists()) {
-                generateFile(type, javaStandardClassName, "Controller", topLevelPackage);
-            } else {
-                out.println(ShellColor.RED, "The controller class " + javaStandardClassName + "Controller already exists");
-            }
+            
+            determineFileAvailabilty(project,directory,type,javaStandardClassName,topLevelPackage,out,"Controller","Controller.java");
+
         }
     }
 
@@ -211,21 +177,17 @@ public class JRebirthPlugin implements Plugin {
 
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + creationType.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
 
-        if (directory.isDirectory()) {
-            out.println(ShellColor.RED, "Unable to Create package. The package '" + directory.toString() + "' is already found");
-            return;
-        } else {
-            directory.mkdir();
-        }
+        determinePackageAvailability(directory, out);
+
     }
 
     /**
      * Creates Java files for Command, Service etc.
-     * 
+     *
      * @param type the type
      * @param topLevelPackage the top level package
      * @param sourceFolder the source folder
-     * @param name the name
+     * @param fileName the file name
      * @param out the out
      */
     private void createNonUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, final String fileName, final PipeOut out) {
@@ -246,13 +208,8 @@ public class JRebirthPlugin implements Plugin {
                 out.println(ShellColor.BLUE, "The " + type.getPackageName() + " package does not exist. Creating it.");
                 directory.mkdir();
             }
-
-            if (directory != null && directory.getChild(finalName + ".java").exists() == false) {
-                generateFile(type, finalName, "", topLevelPackage);
-
-            } else {
-                out.println(ShellColor.RED, "The resource class " + finalName + " already exists");
-            }
+            
+            determineFileAvailabilty(project,directory,type,finalName,topLevelPackage,out,"",".java");
 
         } catch (final Exception e) {
             out.println(ShellColor.RED, "Could not create files.");
@@ -296,8 +253,11 @@ public class JRebirthPlugin implements Plugin {
      * @param name the name
      */
     @Command(value = "mvc-create", help = "Create Model,View and Controller for the given name")
-    public void createMVC(final PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.")
-    final String name) {
+    public void createMVC(final PipeOut out,
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.")
+            final String name
+
+            ) {
         createFiles(CreationType.MVC, name, out);
     }
 
@@ -367,79 +327,4 @@ public class JRebirthPlugin implements Plugin {
         createFiles(CreationType.RESOURCE, resourceName, out);
     }
 
-    /**
-     * Generate file.
-     * 
-     * @param fileType the file type
-     * @param name the name
-     * @param suffix the suffix
-     * @param topLevelPackage the top level package
-     * @throws ResourceNotFoundException the resource not found exception
-     * @throws ParseErrorException the parse error exception
-     * @throws MethodInvocationException the method invocation exception
-     * @throws Exception the exception
-     */
-    private void generateFile(final CreationType fileType, final String name, final String suffix, final String topLevelPackage) throws ResourceNotFoundException
-    {
-
-        final JavaSourceFacet java = this.project.getFacet(JavaSourceFacet.class);
-        final StringWriter writer = new StringWriter();
-
-        final VelocityContext context = new VelocityContext();
-
-        context.put("name", name);
-        context.put("packageImport", topLevelPackage);
-
-        switch (fileType) {
-            case MV:
-            case MVC:
-
-                context.put("package", topLevelPackage + fileType.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
-
-                if ("Model".equals(suffix)) {
-
-                    Velocity.mergeTemplate("TemplateModel.vtl", TEMPLATE_UNICODE, context, writer);
-
-                } else if ("View".equals(suffix)) {
-
-                    Velocity.mergeTemplate("TemplateView.vtl", TEMPLATE_UNICODE, context, writer);
-
-                } else if ("Controller".equals(suffix)) {
-
-                    Velocity.mergeTemplate("TemplateController.vtl", TEMPLATE_UNICODE, context, writer);
-
-                }
-
-                break;
-            case FXML:
-
-                break;
-            case COMMAND:
-                context.put("package", topLevelPackage + fileType.getPackageName());
-                Velocity.mergeTemplate("TemplateCommand.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            case SERVICE:
-                context.put("package", topLevelPackage + fileType.getPackageName());
-                Velocity.mergeTemplate("TemplateService.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            case RESOURCE:
-                context.put("package", topLevelPackage + ".resource");
-                Velocity.mergeTemplate("TemplateResource.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            case BEAN:
-                context.put("package", topLevelPackage + ".beans");
-                Velocity.mergeTemplate("TemplateBean.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            default:
-                break;
-        }
-
-        final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
-        try {
-            java.saveJavaSource(javaClass);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
 }
