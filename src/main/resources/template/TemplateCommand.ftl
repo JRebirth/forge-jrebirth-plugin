@@ -1,9 +1,9 @@
-package $package;
+package ${settings.getTopLevelPacakge()};
 
 import org.jrebirth.core.command.DefaultPoolCommand;
 import org.jrebirth.core.wave.Wave;
 
-public class ${name} extends DefaultPoolCommand
+public class ${settings.getName()} extends DefaultPoolCommand
 {
 
    @Override
