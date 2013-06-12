@@ -1,9 +1,9 @@
-package $package;
+package ${settings.getTopLevelPacakge()};
 
 import org.jrebirth.core.exception.CoreException;
 import org.jrebirth.core.service.ServiceBase;
 
-public class ${name} extends ServiceBase
+public class ${settings.getName()} extends ServiceBase
 {
 
    @Override

@@ -12,15 +12,16 @@
  */
 package org.jrebirth.forge.utils;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.project.Project;
@@ -28,16 +29,23 @@ import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
+import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.PipeOut;
 
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+
 /**
  * JRebirth Constants.
  * 
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
+ * @author Guruprasad Shenoy <gpshenoy@gmail.com>
  */
 public final class Constants {
 
@@ -155,7 +163,7 @@ public final class Constants {
 
     /**
      * Determine package availability.
-     *
+     * 
      * @param beansDirectory the beans directory
      * @param out the out
      */
@@ -171,7 +179,7 @@ public final class Constants {
 
     /**
      * Creates the package if not exist.
-     *
+     * 
      * @param directory the directory
      * @param packageType the package type
      * @param out the out
@@ -185,21 +193,21 @@ public final class Constants {
     }
 
     /**
-     * Determine file availabilty.
-     *
+     * Determine file availability.
+     * 
      * @param project the project
      * @param directory the directory
      * @param type the type
      * @param finalName the final name
-     * @param topLevelPackage the top level package
      * @param out the out
      * @param suffix the suffix
      * @param fileEnding the file ending
+     * @param settings parameters of the template
      */
-    public static void determineFileAvailabilty(final Project project, final DirectoryResource directory, final CreationType type, final String finalName, final String topLevelPackage,
-            final PipeOut out, final String suffix, final String fileEnding) {
+    public static void determineFileAvailabilty(final Project project, final DirectoryResource directory, final CreationType type, final String finalName,
+            final PipeOut out, final String suffix, final String fileEnding, TemplateSettings settings) {
         if (directory != null && directory.getChild(finalName + fileEnding).exists() == false) {
-            generateFile(project, type, finalName, suffix, topLevelPackage);
+            generateFile(project, type, suffix, settings);
 
         } else {
             out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
@@ -208,68 +216,118 @@ public final class Constants {
 
     /**
      * Generate file.
-     *
+     * 
      * @param project the project
      * @param fileType the file type
-     * @param name the name
      * @param suffix the suffix
-     * @param topLevelPackage the top level package
-     * @throws ResourceNotFoundException the resource not found exception
+     * @param settings the parameters to be set in the template
      */
-    public static void generateFile(final Project project, final CreationType fileType, final String name, final String suffix, final String topLevelPackage) throws ResourceNotFoundException
+    public static void generateFile(final Project project, final CreationType fileType, final String suffix, TemplateSettings settings)
     {
 
         final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
         final StringWriter writer = new StringWriter();
+        FileWriter fileWriter = null;
+        Template template = null;
 
-        final VelocityContext context = new VelocityContext();
+        Configuration cfg = new Configuration();
 
-        context.put("name", name);
-        context.put("packageImport", topLevelPackage);
+        cfg.setClassForTemplateLoading(Constants.class, "../../../../template");
+        cfg.setObjectWrapper(new DefaultObjectWrapper());
 
-        switch (fileType) {
-            case MV:
-            case MVC:
+        Map<String, Object> context = new HashMap<String, Object>();
 
-                context.put("package", topLevelPackage + fileType.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
-
-                if ("Model".equals(suffix)) {
-                    Velocity.mergeTemplate("TemplateModel.vtl", TEMPLATE_UNICODE, context, writer);
-                } else if ("View".equals(suffix)) {
-                    Velocity.mergeTemplate("TemplateView.vtl", TEMPLATE_UNICODE, context, writer);
-                } else if ("Controller".equals(suffix)) {
-                    Velocity.mergeTemplate("TemplateController.vtl", TEMPLATE_UNICODE, context, writer);
-                }
-
-                break;
-            case FXML:
-
-                break;
-            case COMMAND:
-                context.put("package", topLevelPackage + fileType.getPackageName());
-                Velocity.mergeTemplate("TemplateCommand.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            case SERVICE:
-                context.put("package", topLevelPackage + fileType.getPackageName());
-                Velocity.mergeTemplate("TemplateService.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            case RESOURCE:
-                context.put("package", topLevelPackage + ".resource");
-                Velocity.mergeTemplate("TemplateResource.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            case BEAN:
-                context.put("package", topLevelPackage + ".beans");
-                Velocity.mergeTemplate("TemplateBean.vtl", TEMPLATE_UNICODE, context, writer);
-                break;
-            default:
-                break;
-        }
-
-        final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
         try {
-            java.saveJavaSource(javaClass);
+            switch (fileType) {
+
+                case MVC:
+
+                    if ("Model".equals(suffix)) {
+
+                        template = cfg.getTemplate("TemplateModel.ftl");
+
+                    } else if ("View".equals(suffix)) {
+
+                        template = cfg.getTemplate("TemplateView.ftl");
+
+                    } else if ("Controller".equals(suffix)) {
+
+                        template = cfg.getTemplate("TemplateController.ftl");
+
+                    }
+
+                    break;
+                case FXML:
+
+                    template = cfg.getTemplate("TemplateFXML.ftl");
+
+                    break;
+                case COMMAND:
+
+                    template = cfg.getTemplate("TemplateCommand.ftl");
+
+                    break;
+                case SERVICE:
+
+                    if (!settings.getName().contains("service") && !settings.getName().contains("Service")) {
+                        settings.setName(settings.getName().concat("Service"));
+                    }
+
+                    template = cfg.getTemplate("TemplateService.ftl");
+
+                    break;
+                case RESOURCE:
+
+                    template = cfg.getTemplate("TemplateResource.ftl");
+
+                    break;
+                case BEAN:
+
+                    settings.setTopLevelPacakge(settings.getImportPackage() + ".beans");
+
+                    template = cfg.getTemplate("TemplateBean.ftl");
+
+                    break;
+                default:
+                    break;
+            }
+
+            context.put("settings", settings);
+
+            if (fileType.equals(CreationType.FXML))
+            {
+
+                ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
+                File fxmlFile = resourceFacet.createResource(new char[0], "/ui/fxml/" + settings.getName() + ".fxml").getUnderlyingResourceObject();
+
+                fileWriter = new FileWriter(fxmlFile);
+                template.process(context, fileWriter);
+                fileWriter.flush();
+
+            } else {
+                template.process(context, writer);
+                writer.flush();
+
+                final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
+                java.saveJavaSource(javaClass);
+            }
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } catch (TemplateException te) {
+            te.printStackTrace();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } finally {
+
+            if (fileWriter != null) {
+                try {
+                    fileWriter.close();
+                } catch (IOException ioe) {
+
+                }
+            }
+
         }
 
     }

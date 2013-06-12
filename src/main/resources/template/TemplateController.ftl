@@ -1,9 +1,9 @@
-package $package;
+package ${settings.getTopLevelPacakge()};
 
 import org.jrebirth.core.exception.CoreException;
 import org.jrebirth.core.ui.DefaultController;
 
-public class ${name}Controller extends DefaultController<${name}Model, ${name}View>
+public class ${settings.getName()}Controller extends DefaultController<${settings.getName()}Model, ${settings.getName()}View>
 {
 
     /**
@@ -12,7 +12,7 @@ public class ${name}Controller extends DefaultController<${name}Model, ${name}Vi
      * @param view the view
      * @throws CoreException the core exception
      */
-    public ${name}Controller(final ${name}View view) throws CoreException 
+    public ${settings.getName()}Controller(final ${settings.getName()}View view) throws CoreException 
     {
         super(view);
     }
