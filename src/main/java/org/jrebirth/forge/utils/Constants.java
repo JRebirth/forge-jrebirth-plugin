@@ -159,13 +159,14 @@ public final class Constants {
      * @param beansDirectory the beans directory
      * @param out the out
      */
-    public static void determinePackageAvailability(final DirectoryResource beansDirectory, final PipeOut out) {
+    public static boolean determinePackageAvailability(final DirectoryResource beansDirectory, final PipeOut out) {
         if (beansDirectory.isDirectory()) {
             out.println(ShellColor.RED, "Unable to Create package. The package '" + beansDirectory.toString() + "' is already found");
-            return;
+            return false;
         } else {
             beansDirectory.mkdir();
         }
+        return true;
     }
 
     /**

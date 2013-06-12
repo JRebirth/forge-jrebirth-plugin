@@ -17,11 +17,10 @@
 package org.jrebirth.forge;
 
 import static org.jrebirth.forge.utils.Constants.createPackageIfNotExist;
+import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
 import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
 import static org.jrebirth.forge.utils.Constants.installDependencies;
 import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
-import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
-
 
 import java.util.Locale;
 import java.util.Properties;
@@ -74,7 +73,6 @@ public class JRebirthPlugin implements Plugin {
     @Inject
     private Event<InstallFacets> install;
 
-
     static {
         final Properties properties = new Properties();
         properties.setProperty("resource.loader", "class");
@@ -116,178 +114,32 @@ public class JRebirthPlugin implements Plugin {
             out.println("JRebirth is not installed. Use 'jrebirth setup' to install.");
         }
     }
-
-    /**
-     * Creates Java files for user interface mainly for Model, Controller and View.
-     * 
-     * @param type the type
-     * @param topLevelPackage the top level package
-     * @param sourceFolder the source folder
-     * @param name the name
-     * @param out the out
-     */
-    private void createUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, final String name, final PipeOut out) {
-
-        DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName()));
-
-        createPackageIfNotExist(directory, "UI", out);
-
-        final DirectoryResource beansDirectory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.BEAN.getPackageName()));
-
-        createPackageIfNotExist(beansDirectory, "beans", out);
-
-        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
-
-        determinePackageAvailability(directory, out);
-
-        final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
-
-       
-        determineFileAvailabilty(project,beansDirectory,CreationType.BEAN,javaStandardClassName,topLevelPackage,out,"",".java");
-        
-        determineFileAvailabilty(project,directory,type,javaStandardClassName,topLevelPackage,out,"Model","Model.java");
-                
-        determineFileAvailabilty(project,directory,type,javaStandardClassName,topLevelPackage,out,"View","View.java");
-
     
-        if (type == CreationType.MVC) {
-            
-            determineFileAvailabilty(project,directory,type,javaStandardClassName,topLevelPackage,out,"Controller","Controller.java");
-
-        }
-    }
-
-    /**
-     * Creates FXML and controller files.
-     * 
-     * @param creationType the creation type
-     * @param topLevelPackage the top level package
-     * @param sourceFolder the source folder
-     * @param name the name
-     * @param out the out
-     */
-    private void createUiFxmlFiles(final CreationType creationType, final String topLevelPackage, final DirectoryResource sourceFolder, final String name, final PipeOut out) {
-
-        DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + creationType.getPackageName()));
-
-        if (!directory.isDirectory()) {
-            out.println(ShellColor.BLUE, "The FXML UI package does not exist. Creating it.");
-            directory.mkdirs();
-        }
-
-        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + creationType.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
-
-        determinePackageAvailability(directory, out);
-
-    }
-
-    /**
-     * Creates Java files for Command, Service etc.
-     *
-     * @param type the type
-     * @param topLevelPackage the top level package
-     * @param sourceFolder the source folder
-     * @param fileName the file name
-     * @param out the out
-     */
-    private void createNonUiFiles(final CreationType type, final String topLevelPackage, final DirectoryResource sourceFolder, final String fileName, final PipeOut out) {
-
-        DirectoryResource directory = null;
-        String finalName = "";
-        // Convert first character to upper case
-        finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
-        try {
-
-            if (!"service".contains(finalName) && !"Service".contains(finalName)) {
-                finalName = finalName.concat("Service");
-            }
-
-            directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "."));
-
-            if (directory != null && !directory.isDirectory()) {
-                out.println(ShellColor.BLUE, "The " + type.getPackageName() + " package does not exist. Creating it.");
-                directory.mkdir();
-            }
-            
-            determineFileAvailabilty(project,directory,type,finalName,topLevelPackage,out,"",".java");
-
-        } catch (final Exception e) {
-            out.println(ShellColor.RED, "Could not create files.");
-        }
-    }
-
-    /**
-     * Creates the files.
-     * 
-     * @param type the type
-     * @param name the name
-     * @param out the out
-     */
-    private void createFiles(final CreationType type, final String name, final PipeOut out) {
-
-        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
-        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
-
-        switch (type) {
-            case MV:
-            case MVC:
-                createUiFiles(type, metadata.getTopLevelPackage(), sourceFolder, name, out);
-                break;
-            case FXML:
-                createUiFxmlFiles(type, metadata.getTopLevelPackage(), sourceFolder, name, out);
-                break;
-            case COMMAND:
-            case SERVICE:
-            case RESOURCE:
-                createNonUiFiles(type, metadata.getTopLevelPackage(), sourceFolder, name, out);
-                break;
-            default:
-                break;
-        }
-    }
-
     /**
      * Command to create Model, View and Controller.
      * 
      * @param out the out
      * @param name the name
+     * @param controllerGenerate the controller generate
+     * @param beanGenerate the bean generate
+     * @param fxmlGenerate the fxml generate
      */
     @Command(value = "mvc-create", help = "Create Model,View and Controller for the given name")
     public void createMVC(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.")
-            final String name
+            final String name,
+            @Option(name = "controllerGenerate", shortName = "cg", required = false, defaultValue = "true", help = "Is the Controller to be generatted automatically? ")
+            final boolean controllerGenerate,
+            @Option(name = "beanGenerate", shortName = "bg", required = false, defaultValue = "true", help = "Is the Controller to be generatted automatically? ")
+            final boolean beanGenerate,
+            @Option(name = "fxmlGenerate", shortName = "fg", required = false, defaultValue = "false", help = "Is the Controller to be generatted automatically? ")
+            final boolean fxmlGenerate
 
             ) {
-        createFiles(CreationType.MVC, name, out);
+        createUiFiles(out, CreationType.MVC, name, controllerGenerate, beanGenerate, fxmlGenerate);
     }
 
-    /**
-     * Creates the fxml.
-     * 
-     * @param out the out
-     * @param name the name
-     */
-    @Command(value = "fxml-create", help = "Create FXML and Controller for the given name")
-    public void createFXML(final PipeOut out, @Option(name = "name", shortName = "n", required = true, help = "Name of the FXML Group to be created.")
-    final String name) {
-        createFiles(CreationType.FXML, name, out);
-    }
-
-    /**
-     * Creates the mv.
-     * 
-     * @param out the out
-     * @param name the name
-     */
-    @Command(value = "mv-create", help = "Create Model and View for the given name")
-    public void createMV(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the MV Group to be created.")
-            final String name) {
-
-        createFiles(CreationType.MV, name, out);
-    }
-
-    /**
+   /**
      * Creates the command.
      * 
      * @param out the out
@@ -297,7 +149,7 @@ public class JRebirthPlugin implements Plugin {
     public void createCommand(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.")
             final String commandName) {
-        createFiles(CreationType.COMMAND, commandName, out);
+        createNonUiFiles(CreationType.COMMAND, commandName, out);
     }
 
     /**
@@ -310,8 +162,7 @@ public class JRebirthPlugin implements Plugin {
     public void createService(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.")
             final String serviceName) {
-
-        createFiles(CreationType.SERVICE, serviceName, out);
+        createNonUiFiles(CreationType.SERVICE, serviceName, out);
     }
 
     /**
@@ -324,7 +175,99 @@ public class JRebirthPlugin implements Plugin {
     public void createResource(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.")
             final String resourceName) {
-        createFiles(CreationType.RESOURCE, resourceName, out);
+        createNonUiFiles(CreationType.RESOURCE, resourceName, out);
     }
+
+    /**
+     * Creates Java files for user interface mainly for Model, Controller and View.
+     * 
+     * @param out the out
+     * @param type the type
+     * @param name the name
+     * @param controllerGenerate the controller generate
+     * @param beanGenerate the bean generate
+     * @param fxmlGenerate the fxml generate
+     */
+    private void createUiFiles(final PipeOut out, final CreationType type, final String name, final boolean controllerGenerate, final boolean beanGenerate, final boolean fxmlGenerate) {
+
+        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
+        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
+
+        final String topLevelPackage = metadata.getTopLevelPackage();
+
+        DirectoryResource directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName()));
+
+        createPackageIfNotExist(directory, "UI", out);
+
+        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
+
+        if (determinePackageAvailability(directory, out)==false)
+            return;
+
+        final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
+
+        if (fxmlGenerate)
+        {
+        //TODO: Add creationof FXML here.
+        }
+        else
+        {
+            determineFileAvailabilty(this.project, directory, type, javaStandardClassName, topLevelPackage, out, "Model", "Model.java");
+
+            determineFileAvailabilty(this.project, directory, type, javaStandardClassName, topLevelPackage, out, "View", "View.java");
+            if (controllerGenerate) {
+                determineFileAvailabilty(this.project, directory, type, javaStandardClassName, topLevelPackage, out, "Controller", "Controller.java");
+            }
+        }
+
+        if (beanGenerate)
+        {
+            final DirectoryResource beansDirectory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.BEAN.getPackageName()));
+
+            createPackageIfNotExist(beansDirectory, "beans", out);
+
+            determineFileAvailabilty(this.project, beansDirectory, CreationType.BEAN, javaStandardClassName, topLevelPackage, out, "", ".java");
+        }
+    }
+
+    /**
+     * Creates Java files for Command, Service etc.
+     *
+     * @param type the type
+     * @param fileName the file name
+     * @param out the out
+     */
+    private void createNonUiFiles(final CreationType type, final String fileName, final PipeOut out) {
+
+        DirectoryResource directory = null;
+        String finalName = "";
+
+        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
+        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
+        final String topLevelPackage = metadata.getTopLevelPackage();
+
+        finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
+
+        try {
+
+            if (!"service".contains(finalName) && !"Service".contains(finalName)) {
+                finalName = finalName.concat("Service");
+            }
+
+            directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "."));
+
+            if (directory != null && !directory.isDirectory()) {
+                out.println(ShellColor.BLUE, "The " + type.getPackageName() + " package does not exist. Creating it.");
+                directory.mkdir();
+            }
+
+            determineFileAvailabilty(this.project, directory, type, finalName, topLevelPackage, out, "", ".java");
+
+        } catch (final Exception e) {
+            out.println(ShellColor.RED, "Could not create files.");
+        }
+    }
+
+
 
 }
