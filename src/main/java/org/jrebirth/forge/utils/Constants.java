@@ -12,16 +12,27 @@
  */
 package org.jrebirth.forge.utils;
 
+import java.io.FileNotFoundException;
+import java.io.StringWriter;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.jboss.forge.parser.JavaParser;
+import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
 import org.jboss.forge.project.facets.DependencyFacet;
+import org.jboss.forge.project.facets.JavaSourceFacet;
+import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
+import org.jboss.forge.shell.plugins.PipeOut;
 
 /**
  * JRebirth Constants.
@@ -45,6 +56,7 @@ public final class Constants {
     /** The Constant PACKAGE_DELIMITER. */
     public static final String PACKAGE_DELIMITER = ".";
 
+    /** The resource bundle. */
     public static ResourceBundle resourceBundle = ResourceBundle.getBundle("ResourceBundle");
 
     /**
@@ -83,7 +95,9 @@ public final class Constants {
         }
     }
 
-    /** Private constructor */
+    /**
+     * Private constructor.
+     */
     private Constants() {
     }
 
@@ -102,7 +116,6 @@ public final class Constants {
      * @return the dependency builder
      */
     public static DependencyBuilder jrebirthCoreDependency() {
-        System.out.println(resourceBundle.getString("presentationModuleVersion"));
         return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion("0.7.4-SNAPSHOT");
     }
 
@@ -137,6 +150,126 @@ public final class Constants {
         dependencyFacet.addDirectDependency(dependency);
 
         writer.println(ShellColor.GREEN, dependency.getGroupId() + ":" + dependency.getArtifactId() + ":" + dependency.getVersion() + " is added to the dependency.");
+
+    }
+
+    /**
+     * Determine package availability.
+     *
+     * @param beansDirectory the beans directory
+     * @param out the out
+     */
+    public static void determinePackageAvailability(final DirectoryResource beansDirectory, final PipeOut out) {
+        if (beansDirectory.isDirectory()) {
+            out.println(ShellColor.RED, "Unable to Create package. The package '" + beansDirectory.toString() + "' is already found");
+            return;
+        } else {
+            beansDirectory.mkdir();
+        }
+    }
+
+    /**
+     * Creates the package if not exist.
+     *
+     * @param directory the directory
+     * @param packageType the package type
+     * @param out the out
+     */
+    public static void createPackageIfNotExist(final DirectoryResource directory, final String packageType, final PipeOut out) {
+
+        if (directory.isDirectory() == false) {
+            out.println(ShellColor.BLUE, "The " + packageType + " package does not exist. Creating it.");
+            directory.mkdir();
+        }
+    }
+
+    /**
+     * Determine file availabilty.
+     *
+     * @param project the project
+     * @param directory the directory
+     * @param type the type
+     * @param finalName the final name
+     * @param topLevelPackage the top level package
+     * @param out the out
+     * @param suffix the suffix
+     * @param fileEnding the file ending
+     */
+    public static void determineFileAvailabilty(final Project project, final DirectoryResource directory, final CreationType type, final String finalName, final String topLevelPackage,
+            final PipeOut out, final String suffix, final String fileEnding) {
+        if (directory != null && directory.getChild(finalName + fileEnding).exists() == false) {
+            generateFile(project, type, finalName, suffix, topLevelPackage);
+
+        } else {
+            out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
+        }
+    }
+
+    /**
+     * Generate file.
+     *
+     * @param project the project
+     * @param fileType the file type
+     * @param name the name
+     * @param suffix the suffix
+     * @param topLevelPackage the top level package
+     * @throws ResourceNotFoundException the resource not found exception
+     */
+    public static void generateFile(final Project project, final CreationType fileType, final String name, final String suffix, final String topLevelPackage) throws ResourceNotFoundException
+    {
+
+        final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+        final StringWriter writer = new StringWriter();
+
+        final VelocityContext context = new VelocityContext();
+
+        context.put("name", name);
+        context.put("packageImport", topLevelPackage);
+
+        switch (fileType) {
+            case MV:
+            case MVC:
+
+                context.put("package", topLevelPackage + fileType.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
+
+                if ("Model".equals(suffix)) {
+                    Velocity.mergeTemplate("TemplateModel.vtl", TEMPLATE_UNICODE, context, writer);
+                } else if ("View".equals(suffix)) {
+                    Velocity.mergeTemplate("TemplateView.vtl", TEMPLATE_UNICODE, context, writer);
+                } else if ("Controller".equals(suffix)) {
+                    Velocity.mergeTemplate("TemplateController.vtl", TEMPLATE_UNICODE, context, writer);
+                }
+
+                break;
+            case FXML:
+
+                break;
+            case COMMAND:
+                context.put("package", topLevelPackage + fileType.getPackageName());
+                Velocity.mergeTemplate("TemplateCommand.vtl", TEMPLATE_UNICODE, context, writer);
+                break;
+            case SERVICE:
+                context.put("package", topLevelPackage + fileType.getPackageName());
+                Velocity.mergeTemplate("TemplateService.vtl", TEMPLATE_UNICODE, context, writer);
+                break;
+            case RESOURCE:
+                context.put("package", topLevelPackage + ".resource");
+                Velocity.mergeTemplate("TemplateResource.vtl", TEMPLATE_UNICODE, context, writer);
+                break;
+            case BEAN:
+                context.put("package", topLevelPackage + ".beans");
+                Velocity.mergeTemplate("TemplateBean.vtl", TEMPLATE_UNICODE, context, writer);
+                break;
+            default:
+                break;
+        }
+
+        final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
+        try {
+            java.saveJavaSource(javaClass);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
 
