@@ -16,14 +16,13 @@
  */
 package org.jrebirth.forge;
 
+import static org.jrebirth.forge.utils.Constants.createJavaEnumUsingTemplate;
+import static org.jrebirth.forge.utils.Constants.createJavaInterfaceUsingTemplate;
 import static org.jrebirth.forge.utils.Constants.createPackageIfNotExist;
 import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
 import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
 import static org.jrebirth.forge.utils.Constants.installDependencies;
 import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
-import static org.jrebirth.forge.utils.Constants.createJavaFileUsingTemplate;
-
-
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -301,19 +300,16 @@ public class JRebirthPlugin implements Plugin {
             if (directory != null && directory.getChild(finalName + ".java").exists() == false) {
                 // createJavaFileUsingTemplate(project, "", context);
 
-                if (allResource)
+                if (allResource || colorGenerate) {
+                    createJavaInterfaceUsingTemplate(project, "TemplateColorResource.ftl", context);
+                }
+                if (allResource || fontGenerate)
                 {
-                    createJavaFileUsingTemplate(project,"TemplateColorResource.ftl",context);
-                    createJavaFileUsingTemplate(project,"TemplateImagesResource.ftl",context);
-                    createJavaFileUsingTemplate(project,"TemplateFontsResource.ftl",context);
-                    createJavaFileUsingTemplate(project,"TemplateFontsLoaderResource.ftl",context);
+                    createJavaInterfaceUsingTemplate(project, "TemplateFontsResource.ftl", context);
+                    createJavaEnumUsingTemplate(project, "TemplateFontsLoaderResource.ftl", context);
                 }
-                if (colorGenerate) {
-                }
-                if (fontGenerate)
-                {
-                }
-                if (imageGenerate) {
+                if (allResource || imageGenerate) {
+                    createJavaInterfaceUsingTemplate(project, "TemplateImagesResource.ftl", context);
                 }
 
             } else {
