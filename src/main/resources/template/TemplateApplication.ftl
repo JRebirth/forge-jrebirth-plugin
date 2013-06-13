@@ -13,8 +13,7 @@ import org.jrebirth.core.application.AbstractApplication;
 import org.jrebirth.core.resource.font.FontItem;
 import org.jrebirth.core.ui.Model;
 import org.jrebirth.core.wave.Wave;
-import org.jrebirth.demo.masteringtables.resources.MTFonts;
-import org.jrebirth.demo.masteringtables.ui.page.PageModel;
+import org.jrebirth.core.ui.DefaultModel;
 
 /**
  * The MTApplication is the main class used to start the application in standalone mode.
@@ -35,7 +34,7 @@ public final class ${settings.getName()}AppMain extends AbstractApplication<Stac
      */
     @Override
     public Class<? extends Model> getFirstModelClass() {
-        return PageModel.class;
+        return DefaultModel.class;
     }
 
     /**
