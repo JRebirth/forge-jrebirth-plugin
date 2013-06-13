@@ -23,16 +23,15 @@ import static org.jrebirth.forge.utils.Constants.installDependencies;
 import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
 
 import java.util.Locale;
-import java.util.Properties;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-import org.apache.velocity.app.Velocity;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.MetadataFacet;
+import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
 import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.ShellColor;
@@ -49,11 +48,13 @@ import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
 import org.jrebirth.forge.utils.Constants.CreationType;
+import org.jrebirth.forge.utils.TemplateSettings;
 
 /**
  * The main plugin for JRebirth.
  * 
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
+ * @author Guruprasad Shenoy <gpshenoy@gmail.com>
  */
 @Alias("jrebirth")
 @Help("A Forge addon to enable and work on JRebirth framework.")
@@ -72,13 +73,6 @@ public class JRebirthPlugin implements Plugin {
     /** The install. */
     @Inject
     private Event<InstallFacets> install;
-
-    static {
-        final Properties properties = new Properties();
-        properties.setProperty("resource.loader", "class");
-        properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-        Velocity.init(properties);
-    }
 
     /**
      * The setup command for JRebirth. This adds dependency to the current project
@@ -114,7 +108,7 @@ public class JRebirthPlugin implements Plugin {
             out.println("JRebirth is not installed. Use 'jrebirth setup' to install.");
         }
     }
-    
+
     /**
      * Command to create Model, View and Controller.
      * 
@@ -139,7 +133,7 @@ public class JRebirthPlugin implements Plugin {
         createUiFiles(out, CreationType.MVC, name, controllerGenerate, beanGenerate, fxmlGenerate);
     }
 
-   /**
+    /**
      * Creates the command.
      * 
      * @param out the out
@@ -185,8 +179,7 @@ public class JRebirthPlugin implements Plugin {
      * @param type the type
      * @param name the name
      * @param controllerGenerate the controller generate
-     * @param beanGenerate the bean generate
-     * @param fxmlGenerate the fxml generate
+     * @param beanGenerate the bean generate . * @param fxmlGenerate the fxml generate
      */
     private void createUiFiles(final PipeOut out, final CreationType type, final String name, final boolean controllerGenerate, final boolean beanGenerate, final boolean fxmlGenerate) {
 
@@ -201,23 +194,31 @@ public class JRebirthPlugin implements Plugin {
 
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
 
-        if (determinePackageAvailability(directory, out)==false)
+        if (determinePackageAvailability(directory, out) == false)
             return;
 
         final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
+        TemplateSettings settings = new TemplateSettings(javaStandardClassName, topLevelPackage);
+        settings.setTopLevelPacakge(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
+        settings.setBeanCreate(beanGenerate);
+        settings.setControllerCreate(controllerGenerate);
+        settings.setFXMLCreate(fxmlGenerate);
+
         if (fxmlGenerate)
         {
-        //TODO: Add creationof FXML here.
-        }
-        else
-        {
-            determineFileAvailabilty(this.project, directory, type, javaStandardClassName, topLevelPackage, out, "Model", "Model.java");
+            DirectoryResource resourceDir = this.project.getFacet(ResourceFacet.class).getResourceFolder();
+            createPackageIfNotExist(resourceDir.getChildDirectory("ui"), "", out);
+            createPackageIfNotExist(resourceDir.getChildDirectory("ui").getChildDirectory("fxml"), "", out);
 
-            determineFileAvailabilty(this.project, directory, type, javaStandardClassName, topLevelPackage, out, "View", "View.java");
-            if (controllerGenerate) {
-                determineFileAvailabilty(this.project, directory, type, javaStandardClassName, topLevelPackage, out, "Controller", "Controller.java");
-            }
+            determineFileAvailabilty(this.project, resourceDir, CreationType.FXML, javaStandardClassName, out, "", ".fxml", settings);
+        }
+
+        determineFileAvailabilty(this.project, directory, type, javaStandardClassName, out, "Model", "Model.java", settings);
+
+        determineFileAvailabilty(this.project, directory, type, javaStandardClassName, out, "View", "View.java", settings);
+        if (controllerGenerate) {
+            determineFileAvailabilty(this.project, directory, type, javaStandardClassName, out, "Controller", "Controller.java", settings);
         }
 
         if (beanGenerate)
@@ -226,13 +227,13 @@ public class JRebirthPlugin implements Plugin {
 
             createPackageIfNotExist(beansDirectory, "beans", out);
 
-            determineFileAvailabilty(this.project, beansDirectory, CreationType.BEAN, javaStandardClassName, topLevelPackage, out, "", ".java");
+            determineFileAvailabilty(this.project, beansDirectory, CreationType.BEAN, javaStandardClassName, out, "", ".java", settings);
         }
     }
 
     /**
      * Creates Java files for Command, Service etc.
-     *
+     * 
      * @param type the type
      * @param fileName the file name
      * @param out the out
@@ -250,10 +251,6 @@ public class JRebirthPlugin implements Plugin {
 
         try {
 
-            if (!"service".contains(finalName) && !"Service".contains(finalName)) {
-                finalName = finalName.concat("Service");
-            }
-
             directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "."));
 
             if (directory != null && !directory.isDirectory()) {
@@ -261,13 +258,13 @@ public class JRebirthPlugin implements Plugin {
                 directory.mkdir();
             }
 
-            determineFileAvailabilty(this.project, directory, type, finalName, topLevelPackage, out, "", ".java");
+            TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
+            settings.setTopLevelPacakge(topLevelPackage + type.getPackageName());
+            determineFileAvailabilty(this.project, directory, type, finalName, out, "", ".java", settings);
 
         } catch (final Exception e) {
             out.println(ShellColor.RED, "Could not create files.");
         }
     }
-
-
 
 }
