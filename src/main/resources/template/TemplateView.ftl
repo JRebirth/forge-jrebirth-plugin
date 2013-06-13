@@ -8,16 +8,13 @@ import org.jrebirth.core.ui.DefaultController;
 </#if>
 import org.jrebirth.core.ui.DefaultView;
 
-
+/**
+* {@inheritDoc}
+*/
 public class ${settings.getName()}View extends DefaultView<${settings.getName()}Model, Node <#if settings.isControllerCreate() > ,${settings.getName()}Controller<#else> ,DefaultController<${settings.getName()}Model, ${settings.getName()}View></#if>> 
 {
 
-    /**
-     * Instantiates a new question view.
-     * 
-     * @param model the model
-     * @throws CoreException the core exception
-     */
+
     public ${settings.getName()}View(final ${settings.getName()}Model model) throws CoreException {
         super(model);
     }
