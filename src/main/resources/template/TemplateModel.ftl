@@ -6,7 +6,7 @@ import ${settings.getImportPackage()}.beans.${settings.getName()};
 
 import org.jrebirth.core.ui.DefaultObjectModel;
 
-public class ${settings.getName()}Model extends DefaultObjectModel<${settings.getName()}Model, ${settings.getName()}View <#if settings.isBeanCreate()> ,${settings.getName()}<#else>, Object</#if>>
+public class ${settings.getName()}Model extends DefaultObjectModel<${settings.getName()}Model, ${settings.getName()}View <#if settings.isBeanCreate()> ,${settings.getName()}</#if>>
 {
 
     /**

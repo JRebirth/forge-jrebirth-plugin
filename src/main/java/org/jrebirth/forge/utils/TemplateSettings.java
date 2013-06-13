@@ -26,6 +26,8 @@ public class TemplateSettings {
     private String name = null;
     private String topLevelPacakge = null;
     private String importPackage = null;
+    private boolean allResource = true;
+    
 
     /**
      * 
