@@ -58,6 +58,7 @@ public class JRebirthFacet extends BaseFacet {
 
         installDependencies(project, shell, writer, jrebirthCoreDependency(), false);
         installDependencies(project, shell, writer, javafxDependency(), false);
+        installDependencies(project, shell, writer, slf4jslf4jDependency(), false);
 
         return true;
     }
