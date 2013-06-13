@@ -132,7 +132,16 @@ public final class Constants {
      * @return the dependency builder
      */
     public static DependencyBuilder jrebirthCoreDependency() {
-        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion("0.7.4-SNAPSHOT");
+        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion(resourceBundle.getString("jrebirthVersion"));
+    }
+    
+    /**
+     * Jrebirth slf4j dependency.
+     * 
+     * @return the dependency builder
+     */
+    public static DependencyBuilder slf4jslf4jDependency() {
+        return DependencyBuilder.create().setGroupId("org.slf4j").setArtifactId("slf4j-simple").setVersion(resourceBundle.getString("slf4jSimpleVersion"));
     }
 
     /**
