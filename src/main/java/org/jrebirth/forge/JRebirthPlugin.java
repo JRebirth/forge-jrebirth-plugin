@@ -21,8 +21,13 @@ import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
 import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
 import static org.jrebirth.forge.utils.Constants.installDependencies;
 import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
+import static org.jrebirth.forge.utils.Constants.createJavaFileUsingTemplate;
 
+
+
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -168,8 +173,16 @@ public class JRebirthPlugin implements Plugin {
     @Command(value = "resource-create", help = "Create a resource for the given name")
     public void createResource(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.")
-            final String resourceName) {
-        createNonUiFiles(CreationType.RESOURCE, resourceName, out);
+            final String resourceName,
+            @Option(name = "all", shortName = "a", required = true, help = "Generate all the resource")
+            final boolean allResource,
+            @Option(name = "colorGenerate", shortName = "cg", required = false, help = "Generate resource for Colors")
+            final boolean colorGenerate,
+            @Option(name = "fontGenerate", shortName = "fg", required = false, help = "Generate resource for Fonts")
+            final boolean fontGenerate,
+            @Option(name = "imageGenerate", shortName = "ig", required = false, help = "Generate resource for Images")
+            final boolean imageGenerate) {
+        createResourceFiles(resourceName, out, allResource, colorGenerate, fontGenerate, imageGenerate);
     }
 
     /**
@@ -253,13 +266,62 @@ public class JRebirthPlugin implements Plugin {
 
             directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "."));
 
-            createPackageIfNotExist(directory,type.getPackageName(),out);
-           
+            createPackageIfNotExist(directory, type.getPackageName(), out);
+
             final TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
             settings.setTopLevelPacakge(topLevelPackage + type.getPackageName());
             determineFileAvailabilty(this.project, directory, type, finalName, out, "", ".java", settings);
 
         } catch (final Exception e) {
+            out.println(ShellColor.RED, "Could not create files.");
+        }
+    }
+
+    private void createResourceFiles(final String fileName, final PipeOut out, final boolean allResource, final boolean colorGenerate, final boolean fontGenerate, final boolean imageGenerate) {
+
+        DirectoryResource directory = null;
+        String finalName = "";
+
+        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
+        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
+        final String topLevelPackage = metadata.getTopLevelPackage();
+
+        finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
+        TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
+        Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
+        settings.setTopLevelPacakge(topLevelPackage + CreationType.RESOURCE.getPackageName());
+
+        context.put("settings", settings);
+
+        try {
+            directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
+
+            createPackageIfNotExist(directory, CreationType.RESOURCE.getPackageName(), out);
+
+            if (directory != null && directory.getChild(finalName + ".java").exists() == false) {
+                // createJavaFileUsingTemplate(project, "", context);
+
+                if (allResource)
+                {
+                    createJavaFileUsingTemplate(project,"TemplateColorResource.ftl",context);
+                    createJavaFileUsingTemplate(project,"TemplateImagesResource.ftl",context);
+                    createJavaFileUsingTemplate(project,"TemplateFontsResource.ftl",context);
+                    createJavaFileUsingTemplate(project,"TemplateFontsLoaderResource.ftl",context);
+                }
+                if (colorGenerate) {
+                }
+                if (fontGenerate)
+                {
+                }
+                if (imageGenerate) {
+                }
+
+            } else {
+                out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
+            }
+
+        } catch (final Exception e) {
+            e.printStackTrace();
             out.println(ShellColor.RED, "Could not create files.");
         }
     }
