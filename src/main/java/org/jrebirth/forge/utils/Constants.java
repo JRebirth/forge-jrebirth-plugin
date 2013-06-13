@@ -67,6 +67,12 @@ public final class Constants {
     /** The resource bundle. */
     public static ResourceBundle resourceBundle = ResourceBundle.getBundle("ResourceBundle");
 
+    private static Configuration cfg = new Configuration();
+    static {
+        cfg.setClassForTemplateLoading(Constants.class, "../../../../template");
+        cfg.setObjectWrapper(new DefaultObjectWrapper());
+    }
+
     /**
      * The Enum CreationType.
      */
@@ -213,6 +219,9 @@ public final class Constants {
             out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
         }
     }
+    
+    
+   
 
     /**
      * Generate file.
@@ -225,17 +234,11 @@ public final class Constants {
     public static void generateFile(final Project project, final CreationType fileType, final String suffix, TemplateSettings settings)
     {
 
-        final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
-        final StringWriter writer = new StringWriter();
         FileWriter fileWriter = null;
-        Template template = null;
+        String template = "";
+        Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
 
-        Configuration cfg = new Configuration();
-
-        cfg.setClassForTemplateLoading(Constants.class, "../../../../template");
-        cfg.setObjectWrapper(new DefaultObjectWrapper());
-
-        Map<String, Object> context = new HashMap<String, Object>();
+        context.put("settings", settings);
 
         try {
             switch (fileType) {
@@ -243,73 +246,37 @@ public final class Constants {
                 case MVC:
 
                     if ("Model".equals(suffix)) {
-
-                        template = cfg.getTemplate("TemplateModel.ftl");
-
+                        template = "TemplateModel.ftl";
                     } else if ("View".equals(suffix)) {
-
-                        template = cfg.getTemplate("TemplateView.ftl");
-
+                        template = "TemplateView.ftl";
                     } else if ("Controller".equals(suffix)) {
-
-                        template = cfg.getTemplate("TemplateController.ftl");
-
+                        template = "TemplateController.ftl";
                     }
-
+                    createJavaFileUsingTemplate(project, template, context);
                     break;
                 case FXML:
-
-                    template = cfg.getTemplate("TemplateFXML.ftl");
-
+                    final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
+                    File fxmlFile = resourceFacet.createResource(new char[0], settings.getImportPackage().replaceAll(".", "/") + "/ui/" + settings.getName() + ".fxml").getUnderlyingResourceObject();
+                    createResourceFileUsingTemplate(project, "TemplateFXML.ftl", fxmlFile, context);
                     break;
                 case COMMAND:
-
-                    template = cfg.getTemplate("TemplateCommand.ftl");
-
+                    createJavaFileUsingTemplate(project, "TemplateCommand.ftl", context);
                     break;
                 case SERVICE:
-
                     if (!settings.getName().contains("service") && !settings.getName().contains("Service")) {
-                        settings.setName(settings.getName().concat("Service"));
+                        context.get("settings").setName(settings.getName().concat("Service"));
                     }
-
-                    template = cfg.getTemplate("TemplateService.ftl");
-
+                    createJavaFileUsingTemplate(project, "TemplateService.ftl", context);
                     break;
                 case RESOURCE:
-
-                    template = cfg.getTemplate("TemplateResource.ftl");
-
+                    createJavaFileUsingTemplate(project, "TemplateResource.ftl", context);
                     break;
                 case BEAN:
-
-                    settings.setTopLevelPacakge(settings.getImportPackage() + ".beans");
-
-                    template = cfg.getTemplate("TemplateBean.ftl");
-
+                    context.get("settings").setTopLevelPacakge(settings.getImportPackage() + ".beans");
+                    createJavaFileUsingTemplate(project, "TemplateBean.ftl", context);
                     break;
                 default:
                     break;
-            }
-
-            context.put("settings", settings);
-
-            if (fileType.equals(CreationType.FXML))
-            {
-
-                ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-                File fxmlFile = resourceFacet.createResource(new char[0], settings.getImportPackage().replaceAll(".", "/")+ "/ui/" + settings.getName() + ".fxml").getUnderlyingResourceObject();
-
-                fileWriter = new FileWriter(fxmlFile);
-                template.process(context, fileWriter);
-                fileWriter.flush();
-
-            } else {
-                template.process(context, writer);
-                writer.flush();
-
-                final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
-                java.saveJavaSource(javaClass);
             }
 
         } catch (FileNotFoundException e) {
@@ -329,6 +296,33 @@ public final class Constants {
             }
 
         }
+
+    }
+
+    public static void createResourceFileUsingTemplate(final Project project, final String templateFileName, final File fileObj, final Map<String, TemplateSettings> context) throws IOException,
+            TemplateException {
+
+        Template template = null;
+        template = cfg.getTemplate(templateFileName);
+
+        FileWriter fileWriter = new FileWriter(fileObj);
+        template.process(context, fileWriter);
+        fileWriter.flush();
+
+    }
+
+    public static void createJavaFileUsingTemplate(final Project project, final String templateFileName, final Map<String, TemplateSettings> context) throws IOException,
+            TemplateException {
+        final StringWriter writer = new StringWriter();
+        Template template = null;
+        template = cfg.getTemplate(templateFileName);
+
+        final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+        template.process(context, writer);
+        writer.flush();
+
+        final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
+        java.saveJavaSource(javaClass);
 
     }
 
