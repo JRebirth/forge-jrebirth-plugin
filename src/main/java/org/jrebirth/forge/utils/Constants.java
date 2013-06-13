@@ -24,6 +24,8 @@ import java.util.ResourceBundle;
 
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaClass;
+import org.jboss.forge.parser.java.JavaEnum;
+import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.dependencies.Dependency;
 import org.jboss.forge.project.dependencies.DependencyBuilder;
@@ -219,9 +221,6 @@ public final class Constants {
             out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
         }
     }
-    
-    
-   
 
     /**
      * Generate file.
@@ -323,6 +322,36 @@ public final class Constants {
 
         final JavaClass javaClass = JavaParser.parse(JavaClass.class, writer.toString());
         java.saveJavaSource(javaClass);
+
+    }
+
+    public static void createJavaInterfaceUsingTemplate(final Project project, final String templateFileName, final Map<String, TemplateSettings> context) throws IOException,
+            TemplateException {
+        final StringWriter writer = new StringWriter();
+        Template template = null;
+        template = cfg.getTemplate(templateFileName);
+
+        final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+        template.process(context, writer);
+        writer.flush();
+
+        final JavaInterface javaInterface = JavaParser.parse(JavaInterface.class, writer.toString());
+        java.saveJavaSource(javaInterface);
+
+    }
+
+    public static void createJavaEnumUsingTemplate(final Project project, final String templateFileName, final Map<String, TemplateSettings> context) throws IOException,
+            TemplateException {
+        final StringWriter writer = new StringWriter();
+        Template template = null;
+        template = cfg.getTemplate(templateFileName);
+
+        final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+        template.process(context, writer);
+        writer.flush();
+
+        final JavaEnum javaEnum = JavaParser.parse(JavaEnum.class, writer.toString());
+        java.saveJavaSource(javaEnum);
 
     }
 
