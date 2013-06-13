@@ -122,11 +122,11 @@ public class JRebirthPlugin implements Plugin {
     public void createMVC(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.")
             final String name,
-            @Option(name = "controllerGenerate", shortName = "cg", required = false, defaultValue = "true", help = "Is the Controller to be generatted automatically? ")
+            @Option(name = "controllerGenerate", shortName = "cg", required = false, defaultValue = "true", help = "If true, Controller will be generated for the MVC.")
             final boolean controllerGenerate,
-            @Option(name = "beanGenerate", shortName = "bg", required = false, defaultValue = "true", help = "Is the Controller to be generatted automatically? ")
+            @Option(name = "beanGenerate", shortName = "bg", required = false, defaultValue = "true", help = "If true, Bean will be generated for the MVC.")
             final boolean beanGenerate,
-            @Option(name = "fxmlGenerate", shortName = "fg", required = false, defaultValue = "false", help = "Is the Controller to be generatted automatically? ")
+            @Option(name = "fxmlGenerate", shortName = "fg", required = false, defaultValue = "false", help = "If true, FXML document will be generated for the MVC in resource folder.")
             final boolean fxmlGenerate
 
             ) {
@@ -199,7 +199,7 @@ public class JRebirthPlugin implements Plugin {
 
         final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
-        TemplateSettings settings = new TemplateSettings(javaStandardClassName, topLevelPackage);
+        final TemplateSettings settings = new TemplateSettings(javaStandardClassName, topLevelPackage);
         settings.setTopLevelPacakge(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
         settings.setBeanCreate(beanGenerate);
         settings.setControllerCreate(controllerGenerate);
@@ -253,12 +253,9 @@ public class JRebirthPlugin implements Plugin {
 
             directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "."));
 
-            if (directory != null && !directory.isDirectory()) {
-                out.println(ShellColor.BLUE, "The " + type.getPackageName() + " package does not exist. Creating it.");
-                directory.mkdir();
-            }
-
-            TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
+            createPackageIfNotExist(directory,type.getPackageName(),out);
+           
+            final TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
             settings.setTopLevelPacakge(topLevelPackage + type.getPackageName());
             determineFileAvailabilty(this.project, directory, type, finalName, out, "", ".java", settings);
 

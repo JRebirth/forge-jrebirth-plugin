@@ -298,7 +298,7 @@ public final class Constants {
             {
 
                 ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-                File fxmlFile = resourceFacet.createResource(new char[0], "/ui/fxml/" + settings.getName() + ".fxml").getUnderlyingResourceObject();
+                File fxmlFile = resourceFacet.createResource(new char[0], settings.getImportPackage().replaceAll(".", "/")+ "/ui/" + settings.getName() + ".fxml").getUnderlyingResourceObject();
 
                 fileWriter = new FileWriter(fxmlFile);
                 template.process(context, fileWriter);
