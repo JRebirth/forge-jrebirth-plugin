@@ -17,13 +17,17 @@
 package org.jrebirth.forge;
 
 import static org.jrebirth.forge.utils.Constants.createJavaEnumUsingTemplate;
+import static org.jrebirth.forge.utils.Constants.createJavaFileUsingTemplate;
 import static org.jrebirth.forge.utils.Constants.createJavaInterfaceUsingTemplate;
 import static org.jrebirth.forge.utils.Constants.createPackageIfNotExist;
+import static org.jrebirth.forge.utils.Constants.createResourceFileUsingTemplate;
 import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
 import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
 import static org.jrebirth.forge.utils.Constants.installDependencies;
 import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -54,6 +58,8 @@ import org.jboss.forge.shell.util.Packages;
 import org.jrebirth.forge.utils.Constants.CreationType;
 import org.jrebirth.forge.utils.TemplateSettings;
 
+import freemarker.template.TemplateException;
+
 /**
  * The main plugin for JRebirth.
  * 
@@ -83,13 +89,37 @@ public class JRebirthPlugin implements Plugin {
      * 
      * @param out the out
      * @param moduleName the module name
+     * @throws TemplateException
+     * @throws IOException
      */
     @SetupCommand(help = "Installs basic setup to work with JRebirth Framework.")
     public void setup(final PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.")
-    final String moduleName) {
+    final String moduleName) throws IOException, TemplateException {
 
         if (!this.project.hasFacet(JRebirthFacet.class)) {
             this.install.fire(new InstallFacets(JRebirthFacet.class));
+
+            final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
+
+            TemplateSettings settings = new TemplateSettings("MainApplication", metadata.getTopLevelPackage());
+            final Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
+            settings.setTopLevelPacakge(metadata.getTopLevelPackage());
+
+            context.put("settings", settings);
+            createJavaFileUsingTemplate(this.project, "TemplateApplication.ftl", context);
+
+            final ResourceFacet resourceFacet = this.project.getFacet(ResourceFacet.class);
+            final File rbPropertiesFile = resourceFacet.createResource(new char[0], "jrebirth.properties").getUnderlyingResourceObject();
+
+            settings = new TemplateSettings("jrebirth.properties", "");
+
+            createResourceFileUsingTemplate(this.project, "TemplateMainProperties.ftl", rbPropertiesFile, context);
+            
+            DirectoryResource directory = resourceFacet.getResourceFolder();
+            directory.getChildDirectory("fonts").mkdir();
+            directory.getChildDirectory("images").mkdir();
+            directory.getChildDirectory("styles").mkdir();
+
         }
         if (moduleName != null) {
             if ("Presentation".equalsIgnoreCase(moduleName)) {
@@ -206,8 +236,9 @@ public class JRebirthPlugin implements Plugin {
 
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH)));
 
-        if (determinePackageAvailability(directory, out) == false)
+        if (determinePackageAvailability(directory, out) == false) {
             return;
+        }
 
         final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
 
@@ -219,7 +250,7 @@ public class JRebirthPlugin implements Plugin {
 
         if (fxmlGenerate)
         {
-            DirectoryResource resourceDir = this.project.getFacet(ResourceFacet.class).getResourceFolder();
+            final DirectoryResource resourceDir = this.project.getFacet(ResourceFacet.class).getResourceFolder();
             createPackageIfNotExist(resourceDir.getChildDirectory("ui"), "", out);
             createPackageIfNotExist(resourceDir.getChildDirectory("ui").getChildDirectory("fxml"), "", out);
 
@@ -286,8 +317,8 @@ public class JRebirthPlugin implements Plugin {
         final String topLevelPackage = metadata.getTopLevelPackage();
 
         finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
-        TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
-        Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
+        final TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
+        final Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
         settings.setTopLevelPacakge(topLevelPackage + CreationType.RESOURCE.getPackageName());
 
         context.put("settings", settings);
@@ -301,15 +332,15 @@ public class JRebirthPlugin implements Plugin {
                 // createJavaFileUsingTemplate(project, "", context);
 
                 if (allResource || colorGenerate) {
-                    createJavaInterfaceUsingTemplate(project, "TemplateColorResource.ftl", context);
+                    createJavaInterfaceUsingTemplate(this.project, "TemplateColorResource.ftl", context);
                 }
                 if (allResource || fontGenerate)
                 {
-                    createJavaInterfaceUsingTemplate(project, "TemplateFontsResource.ftl", context);
-                    createJavaEnumUsingTemplate(project, "TemplateFontsLoaderResource.ftl", context);
+                    createJavaInterfaceUsingTemplate(this.project, "TemplateFontsResource.ftl", context);
+                    createJavaEnumUsingTemplate(this.project, "TemplateFontsLoaderResource.ftl", context);
                 }
                 if (allResource || imageGenerate) {
-                    createJavaInterfaceUsingTemplate(project, "TemplateImagesResource.ftl", context);
+                    createJavaInterfaceUsingTemplate(this.project, "TemplateImagesResource.ftl", context);
                 }
 
             } else {

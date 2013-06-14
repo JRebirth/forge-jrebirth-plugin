@@ -140,7 +140,7 @@ public final class Constants {
      * 
      * @return the dependency builder
      */
-    public static DependencyBuilder slf4jslf4jDependency() {
+    public static DependencyBuilder slf4jDependency() {
         return DependencyBuilder.create().setGroupId("org.slf4j").setArtifactId("slf4j-simple").setVersion(resourceBundle.getString("slf4jSimpleVersion"));
     }
 

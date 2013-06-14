@@ -1,6 +1,5 @@
 package ${settings.getTopLevelPacakge()};
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,9 +15,9 @@ import org.jrebirth.core.wave.Wave;
 import org.jrebirth.core.ui.DefaultModel;
 
 /**
- * The MTApplication is the main class used to start the application in standalone mode.
+ * The ${settings.getName()} is the main class used to start the application in standalone mode.
  */
-public final class ${settings.getName()}AppMain extends AbstractApplication<StackPane> {
+public final class ${settings.getName()} extends AbstractApplication<StackPane> {
 
     /**
      * The main method triggered by Java Runtime.
@@ -26,7 +25,7 @@ public final class ${settings.getName()}AppMain extends AbstractApplication<Stac
      * @param args the arguments
      */
     public static void main(final String... args) {
-        Application.launch(MTApplication.class, args);
+        Application.launch(${settings.getName()}.class, args);
     }
 
     /**
@@ -42,7 +41,7 @@ public final class ${settings.getName()}AppMain extends AbstractApplication<Stac
      */
     @Override
     protected String getApplicationTitle() {
-        return "Mastering Tables - Powered by JRebirth";
+        return "${settings.getName()} Application";
     }
 
     /**
