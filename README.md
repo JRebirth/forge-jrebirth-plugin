@@ -17,20 +17,25 @@ Commands
 ========
 JRebirth executible command `jrebirth`. Add following sub commands. 
 
-* `setup` - Instals basic dependency for to work with JRebirth. This instals JRebirth core and JavaFX Jar to your dependency.
-    + Setup also provides option to install JRebirth modules. Currenlty _Presentation_ module is supported. 
-    + To add _Presentation_ to your project execute following command `jrebirth setup --module presentation`
-* `mvc-create` - Creates Model, View and Controller calsses for given name. Use `--name` or `-n` to provide name.
-* `mv-create` - Creates Model and View calsses for given name. Use `--name` or `-n` to provide name.
-* `fxml-create` - Creates FXML JRebirth source files for given name. Use `--name` or `-n` to provide name.
+* `setup` - Instals basic dependency for JRebirth.(core, JAVA_HOME javafx runtime, slf4j).
+    + Setup also creates jrebirth.properties, MainApp, and resource folders for fonts, images and styles. 
+    + `setup --module presentation` - adds _Presentation_ module to your project
+* `mvc-create` - Creates Model, View and Controller calsses for given name. Use `--name` to provide name.
+    + `--controllerGenerate` - default _true_ - Creates Controller
+    + `--beanGenerate` - default _true_ - Created Bean
+    + `--fxmlGenerate` - default _false_ - Create FXML
+    
+NOTE: For best practice, above commad creates sub-package and classes inside `ui.[name]` or `ui.fxml.[name]` package in top level package.
 
-NOTE: For best practice, above commad creates sub-package and Class inside `ui.[name]` or `ui.fxml.[name]` package in top level package.
-
-* `command-create` - Creates Command calss for given name. Use `--name` or `-n` to provide name.
-* `service-create` - Creates Service class for given name. Use `--name` or `-n` to provide name.
-* `resource-create` - Creates Resource class for given name. Use `--name` or `-n` to provide name.
-
-NOTE: For best practice, above commad creates the class inside `command`, `service` or `resource` package in top level package.
+* `command-create` - Creates Command calss for given name. Use `--name` to provide name.
+* `service-create` - Creates Service class for given name. Use `--name` to provide name.
+* `resource-create` - Creates Resource class for given name. Use `--name` to provide name.
+    + `--all` - default _true_ - Creates all resource for the application. 
+    + `--colorGenerate` - default _false_ - Creates Color 
+    + `--fontGenerate` - default _false_ - Creates Font 
+    + `--imageGenerate` - default _false_ - Creates Image 
+    
+NOTE: For best practice, above commad creates the classes inside `command`, `service` or `resource` package in top level package.
 
 Useful Links
 ============
