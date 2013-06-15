@@ -8,7 +8,7 @@ import org.jrebirth.forge.utils.Constants;
 import org.junit.Before;
 
 
-public class AbstractJRebirthPluginTest extends AbstractShellTest {
+public abstract class  AbstractJRebirthPluginTest extends AbstractShellTest {
     
     protected Project project = null;
 
@@ -21,7 +21,7 @@ public class AbstractJRebirthPluginTest extends AbstractShellTest {
     @Before
     public void initializeJRebirthFacesProject() throws Exception {
         project = initializeJavaProject();
-        getShell().execute("rebirth setup");
+        getShell().execute("jrebirth setup");
     }
     
     
