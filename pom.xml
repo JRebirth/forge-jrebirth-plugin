@@ -104,12 +104,7 @@
 			<artifactId>forge-shell</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity</artifactId>
-			<version>1.7</version>
-			<type>jar</type>
-		</dependency>
+		
 
 		<dependency>
 			<groupId>org.freemarker</groupId>
