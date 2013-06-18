@@ -8,8 +8,6 @@ import static org.jrebirth.forge.utils.Constants.slf4jDependency;
 
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
-import org.jboss.forge.resources.DirectoryResource;
-import org.jboss.forge.resources.FileResource;
 import org.junit.Test;
 
 public class JRebirthPluginSetupTest extends AbstractJRebirthPluginTest {
@@ -28,9 +26,7 @@ public class JRebirthPluginSetupTest extends AbstractJRebirthPluginTest {
     public void testSetupHasPropertiesFile() throws Exception {
 
         ResourceFacet resources = project.getFacet(ResourceFacet.class);
-        FileResource<?> applicationContext = resources.getResource("jrebirth.properties");
-        assertTrue(applicationContext.exists());
-
+        assertTrue(resources.getResource("jrebirth.properties").exists());
     }
 
     @Test
@@ -54,23 +50,19 @@ public class JRebirthPluginSetupTest extends AbstractJRebirthPluginTest {
     @Test
     public void testHasFontsFolderInResource() {
         final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-        DirectoryResource directory = resourceFacet.getResourceFolder();
-        assertTrue(directory.getChildDirectory("fonts").exists());
+        assertTrue(resourceFacet.getResourceFolder().getChildDirectory("fonts").exists());
     }
-    
+
     @Test
-    public void testHasImagesInResource() {
+    public void testHasImagesFolderInResource() {
         final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-        DirectoryResource directory = resourceFacet.getResourceFolder();
-        assertTrue(directory.getChildDirectory("images").exists());
+        assertTrue(resourceFacet.getResourceFolder().getChildDirectory("images").exists());
     }
-    
+
     @Test
-    public void testHasStylesInResource() {
+    public void testHasStylesFolderInResource() {
         final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-        DirectoryResource directory = resourceFacet.getResourceFolder();
-        System.out.println(directory.getFullyQualifiedName());
-        assertTrue(directory.getChildDirectory("styles").exists());
+        assertTrue(resourceFacet.getResourceFolder().getChildDirectory("styles").exists());
     }
 
 }
