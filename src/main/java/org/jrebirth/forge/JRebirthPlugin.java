@@ -28,6 +28,7 @@ import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -55,6 +56,7 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
+import org.jrebirth.forge.utils.Constants;
 import org.jrebirth.forge.utils.Constants.CreationType;
 import org.jrebirth.forge.utils.TemplateSettings;
 
@@ -177,7 +179,10 @@ public class JRebirthPlugin implements Plugin {
     public void createCommand(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.")
             final String commandName) {
-        createNonUiFiles(CreationType.COMMAND, commandName, out);
+
+      int choiceIndex = shell.promptChoice("Which type of Command you like to create ?", Constants.COMMAND_TYPES);
+        
+        createNonUiFiles(CreationType.COMMAND, commandName, out,(String)Constants.COMMAND_TYPES[choiceIndex]);
     }
 
     /**
@@ -190,7 +195,7 @@ public class JRebirthPlugin implements Plugin {
     public void createService(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Service to be created.")
             final String serviceName) {
-        createNonUiFiles(CreationType.SERVICE, serviceName, out);
+        createNonUiFiles(CreationType.SERVICE, serviceName, out,null);
     }
 
     /**
@@ -281,7 +286,7 @@ public class JRebirthPlugin implements Plugin {
      * @param fileName the file name
      * @param out the out
      */
-    private void createNonUiFiles(final CreationType type, final String fileName, final PipeOut out) {
+    private void createNonUiFiles(final CreationType type, final String fileName, final PipeOut out,String commandType) {
 
         DirectoryResource directory = null;
         String finalName = "";
@@ -300,6 +305,10 @@ public class JRebirthPlugin implements Plugin {
 
             final TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
             settings.setTopLevelPacakge(topLevelPackage + type.getPackageName());
+            
+            if (commandType != null)
+                settings.setCommandType(commandType);
+            
             determineFileAvailabilty(this.project, directory, type, finalName, out, "", ".java", settings);
 
         } catch (final Exception e) {
@@ -337,7 +346,7 @@ public class JRebirthPlugin implements Plugin {
                 if (allResource || fontGenerate)
                 {
                     createJavaInterfaceUsingTemplate(this.project, "TemplateFontsResource.ftl", context);
-                    createJavaEnumUsingTemplate(this.project, "TemplateFontsLoaderResource.ftl", context);
+                    createJavaEnumUsingTemplate(this.project, "TemplateFontNamesResource.ftl", context);
                 }
                 if (allResource || imageGenerate) {
                     createJavaInterfaceUsingTemplate(this.project, "TemplateImagesResource.ftl", context);
