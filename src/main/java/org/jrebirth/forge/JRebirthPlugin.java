@@ -154,9 +154,9 @@ public class JRebirthPlugin implements Plugin {
      * @param beanGenerate the bean generate
      * @param fxmlGenerate the fxml generate
      */
-    @Command(value = "mvc-create", help = "Create Model,View and Controller for the given name")
+    @Command(value = "ui-create", help = "Create Model,View and Controller for the given name")
     public void createMVC(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the MVC Group to be created.")
+            @Option(name = "name", shortName = "n", required = true, help = "Name of the UI Group to be created.")
             final String name,
             @Option(name = "controllerGenerate", shortName = "cg", required = false, defaultValue = "true", help = "If true, Controller will be generated for the MVC.")
             final boolean controllerGenerate,
