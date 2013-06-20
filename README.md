@@ -20,7 +20,7 @@ JRebirth executible command `jrebirth`. Add following sub commands.
 * `setup` - Instals basic dependency for JRebirth.(core, JAVA_HOME javafx runtime, slf4j).
     + Setup also creates jrebirth.properties, MainApp, and resource folders for fonts, images and styles. 
     + `setup --module presentation` - adds _Presentation_ module to your project
-* `mvc-create` - Creates Model, View and Controller calsses for given name. Use `--name` to provide name.
+* `ui-create` - Creates Model, View and Controller calsses for given name. Use `--name` to provide name.
     + `--controllerGenerate` - default _true_ - Creates Controller
     + `--beanGenerate` - default _true_ - Created Bean
     + `--fxmlGenerate` - default _false_ - Create FXML
