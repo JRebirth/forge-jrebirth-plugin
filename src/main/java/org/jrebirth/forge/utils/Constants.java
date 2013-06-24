@@ -17,7 +17,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +65,8 @@ public final class Constants {
 
     /** The Constant PACKAGE_DELIMITER. */
     public static final String PACKAGE_DELIMITER = ".";
-    
-   public static final Object[] COMMAND_TYPES ={"DefaultUICommand", "DefaultPoolCommand", "DefaultCommand"};
-   
-    
+
+    public static final Object[] COMMAND_TYPES = { "DefaultCommand", "DefaultUICommand", "DefaultPoolCommand", "DefaultMultiCommand" };
 
     /** The resource bundle. */
     public static ResourceBundle resourceBundle = ResourceBundle.getBundle("ResourceBundle");
@@ -139,7 +136,7 @@ public final class Constants {
     public static DependencyBuilder jrebirthCoreDependency() {
         return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion(resourceBundle.getString("jrebirthVersion"));
     }
-    
+
     /**
      * Jrebirth slf4j dependency.
      * 
