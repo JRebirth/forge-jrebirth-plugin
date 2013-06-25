@@ -23,10 +23,12 @@ import static org.jrebirth.forge.utils.Constants.createPackageIfNotExist;
 import static org.jrebirth.forge.utils.Constants.createResourceFileUsingTemplate;
 import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
 import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
+import static org.jrebirth.forge.utils.Constants.firstLetterCaps;
 import static org.jrebirth.forge.utils.Constants.installDependencies;
 import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -35,6 +37,8 @@ import java.util.Map;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
+import org.jboss.forge.parser.JavaParser;
+import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
@@ -42,6 +46,7 @@ import org.jboss.forge.project.facets.MetadataFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
 import org.jboss.forge.resources.DirectoryResource;
+import org.jboss.forge.shell.Shell;
 import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
@@ -73,9 +78,12 @@ import freemarker.template.TemplateException;
 @RequiresProject
 public class JRebirthPlugin implements Plugin {
 
-    /** The shell. */
+    /** The shell prompt. */
     @Inject
-    private ShellPrompt shell;
+    private ShellPrompt shellPrompt;
+
+    @Inject
+    private Shell shell;
 
     /** The project. */
     @Inject
@@ -102,7 +110,7 @@ public class JRebirthPlugin implements Plugin {
 
             final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
 
-            TemplateSettings settings = new TemplateSettings("MainApplication", metadata.getTopLevelPackage());
+            TemplateSettings settings = new TemplateSettings(firstLetterCaps(metadata.getProjectName()) + "App", metadata.getTopLevelPackage());
             final Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
             settings.setTopLevelPacakge(metadata.getTopLevelPackage());
 
@@ -116,7 +124,7 @@ public class JRebirthPlugin implements Plugin {
 
             createResourceFileUsingTemplate(this.project, "TemplateMainProperties.ftl", rbPropertiesFile, context);
 
-            DirectoryResource directory = resourceFacet.getResourceFolder();
+            final DirectoryResource directory = resourceFacet.getResourceFolder();
             directory.getChildDirectory("fonts").mkdir();
             directory.getChildDirectory("images").mkdir();
             directory.getChildDirectory("styles").mkdir();
@@ -125,7 +133,7 @@ public class JRebirthPlugin implements Plugin {
         if (moduleName != null) {
             if ("Presentation".equalsIgnoreCase(moduleName)) {
 
-                installDependencies(this.project, this.shell, out, jrebirthPresentationDependency(), true);
+                installDependencies(this.project, this.shellPrompt, out, jrebirthPresentationDependency(), true);
             }
         }
     }
@@ -165,7 +173,7 @@ public class JRebirthPlugin implements Plugin {
             final boolean fxmlGenerate
 
             ) {
-        createUiFiles(out, CreationType.MVC, name, controllerGenerate, beanGenerate, fxmlGenerate);
+        createUiFiles(out, CreationType.UI, name, controllerGenerate, beanGenerate, fxmlGenerate);
     }
 
     /**
@@ -179,7 +187,7 @@ public class JRebirthPlugin implements Plugin {
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.")
             final String commandName) {
 
-        int choiceIndex = shell.promptChoice("Which type of Command you like to create ?", Constants.COMMAND_TYPES);
+        final int choiceIndex = this.shellPrompt.promptChoice("Which type of Command you like to create ?", Constants.COMMAND_TYPES);
 
         createNonUiFiles(CreationType.COMMAND, commandName, out, (String) Constants.COMMAND_TYPES[choiceIndex]);
     }
@@ -205,8 +213,6 @@ public class JRebirthPlugin implements Plugin {
      */
     @Command(value = "resource-create", help = "Create a resource for the given name")
     public void createResource(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of the Resource to be created.")
-            final String resourceName,
             @Option(name = "all", shortName = "a", required = true, help = "Generate all the resource")
             final boolean allResource,
             @Option(name = "colorGenerate", shortName = "cg", required = false, help = "Generate resource for Colors")
@@ -215,9 +221,57 @@ public class JRebirthPlugin implements Plugin {
             final boolean fontGenerate,
             @Option(name = "imageGenerate", shortName = "ig", required = false, help = "Generate resource for Images")
             final boolean imageGenerate) {
-        createResourceFiles(resourceName, out, allResource, colorGenerate, fontGenerate, imageGenerate);
+        createResourceFiles(out, allResource, colorGenerate, fontGenerate, imageGenerate);
     }
 
+    /**
+     * Add color to color resource
+     * 
+     * @param out the out
+     * 
+     */
+    @Command(value = "color-add-web", help = "Add color to color resource")
+    public void colorAddWeb(final PipeOut out,
+            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
+            final String colorName,
+            @Option(name = "hex", shortName = "h", required = true, help = "Color's hex value")
+            final String hexValue) {
+
+        DirectoryResource directory = null;
+        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
+        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
+        final String topLevelPackage = metadata.getTopLevelPackage();
+
+        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
+        if (directory.isDirectory() == false || directory.getChild(metadata.getProjectName() + "Colors.java").exists() == false) {
+            try {
+                out.println(ShellColor.BLUE, "Color resources is not yet created. Creating a new one.");
+                this.shell.execute("jrebirth resource-create --all false --colorGenerate true");
+            } catch (final Exception e) {
+                out.println(ShellColor.RED, "Unable to create resource files for colors.");
+                e.printStackTrace();
+            }
+        }
+        final JavaSourceFacet java = this.project.getFacet(JavaSourceFacet.class);
+        final JavaInterface jInterface = JavaParser.parse(JavaInterface.class, directory.getChild(metadata.getProjectName() + "Colors.java").getResourceInputStream());
+        final String capsColorName = colorName.toUpperCase();
+
+        if (jInterface.hasField(capsColorName) == false) {
+            jInterface.addField("/** Color constant for " + capsColorName + "  */ \n ColorItem " + capsColorName + " = create(new WebColor(\"" + hexValue.toUpperCase() + "\"));\n\n");
+
+            try {
+                java.saveJavaSource(jInterface);
+            } catch (final FileNotFoundException e) {
+
+                out.println(ShellColor.RED, "Unable to save the file while writing the variable (" + capsColorName + ").");
+                e.printStackTrace();
+            }
+        }
+        else {
+            out.println(ShellColor.RED, "The color constant " + capsColorName + " is already exist. Skipping.");
+        }
+
+    }
 
     /**
      * Creates Java files for user interface mainly for Model, Controller and View.
@@ -245,7 +299,7 @@ public class JRebirthPlugin implements Plugin {
             return;
         }
 
-        final String javaStandardClassName = String.valueOf(name.charAt(0)).toUpperCase().concat(name.substring(1, name.length()));
+        final String javaStandardClassName = firstLetterCaps(name);
 
         final TemplateSettings settings = new TemplateSettings(javaStandardClassName, topLevelPackage);
         settings.setTopLevelPacakge(topLevelPackage + type.getPackageName() + "." + name.toLowerCase(Locale.ENGLISH));
@@ -286,7 +340,7 @@ public class JRebirthPlugin implements Plugin {
      * @param fileName the file name
      * @param out the out
      */
-    private void createNonUiFiles(final CreationType type, final String fileName, final PipeOut out, String commandType) {
+    private void createNonUiFiles(final CreationType type, final String fileName, final PipeOut out, final String commandType) {
 
         DirectoryResource directory = null;
         String finalName = "";
@@ -295,7 +349,7 @@ public class JRebirthPlugin implements Plugin {
         final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
         final String topLevelPackage = metadata.getTopLevelPackage();
 
-        finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
+        finalName = firstLetterCaps(fileName);
 
         try {
 
@@ -306,8 +360,9 @@ public class JRebirthPlugin implements Plugin {
             final TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
             settings.setTopLevelPacakge(topLevelPackage + type.getPackageName());
 
-            if (commandType != null)
+            if (commandType != null) {
                 settings.setCommandType(commandType);
+            }
 
             determineFileAvailabilty(this.project, directory, type, finalName, out, "", ".java", settings);
 
@@ -316,7 +371,7 @@ public class JRebirthPlugin implements Plugin {
         }
     }
 
-    private void createResourceFiles(final String fileName, final PipeOut out, final boolean allResource, final boolean colorGenerate, final boolean fontGenerate, final boolean imageGenerate) {
+    private void createResourceFiles(final PipeOut out, final boolean allResource, final boolean colorGenerate, final boolean fontGenerate, final boolean imageGenerate) {
 
         DirectoryResource directory = null;
         String finalName = "";
@@ -325,7 +380,7 @@ public class JRebirthPlugin implements Plugin {
         final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
         final String topLevelPackage = metadata.getTopLevelPackage();
 
-        finalName = String.valueOf(fileName.charAt(0)).toUpperCase().concat(fileName.substring(1, fileName.length()));
+        finalName = firstLetterCaps(metadata.getProjectName());
         final TemplateSettings settings = new TemplateSettings(finalName, topLevelPackage);
         final Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
         settings.setTopLevelPacakge(topLevelPackage + CreationType.RESOURCE.getPackageName());
