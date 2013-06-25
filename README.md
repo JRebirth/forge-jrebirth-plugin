@@ -13,6 +13,11 @@ Prerequisite
 * [JBoss Forge](http://forge.jboss.org)
 * IDE that supports Maven (Eclipse, NetBeans, IntelliJ etc.)
 
+Installing
+==========
+* Run the forge
+* Type following command in forge shell `forge git-plugin https://github.com/JRebirth/forge-jrebirth-plugin.git`
+
 Commands
 ========
 JRebirth executible command `jrebirth`. Add following sub commands. 
@@ -34,8 +39,13 @@ NOTE: For best practice, above commad creates sub-package and classes inside `ui
     + `--colorGenerate` - default _false_ - Creates Color 
     + `--fontGenerate` - default _false_ - Creates Font 
     + `--imageGenerate` - default _false_ - Creates Image 
-    
+
 NOTE: For best practice, above commad creates the classes inside `command`, `service` or `resource` package in top level package.
+
+* `color-add-web` - Creates a constant in Color resource interface using colorname/value
+    + `--name` - Color constant name
+    + `--hex` - Color indicated by hexa decimal value
+    
 
 Useful Links
 ============

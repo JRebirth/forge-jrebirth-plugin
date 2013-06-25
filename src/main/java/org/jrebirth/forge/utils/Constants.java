@@ -83,8 +83,7 @@ public final class Constants {
     public static enum CreationType {
 
         /** The mv. */
-        MV(".ui"), /** The mvc. */
-        MVC(".ui"), /** The command. */
+        UI(".ui"), /** The UI. */
         COMMAND(".command"), /** The service. */
         SERVICE(".service"), /** The resource. */
         RESOURCE(".resource"), /** The fxml. */
@@ -253,7 +252,7 @@ public final class Constants {
         try {
             switch (fileType) {
 
-                case MVC:
+                case UI:
 
                     if ("Model".equals(suffix)) {
                         template = "TemplateModel.ftl";
@@ -364,6 +363,10 @@ public final class Constants {
         final JavaEnum javaEnum = JavaParser.parse(JavaEnum.class, writer.toString());
         java.saveJavaSource(javaEnum);
 
+    }
+    
+    public static String firstLetterCaps(String text) {
+        return String.valueOf(text.charAt(0)).toUpperCase().concat(text.substring(1, text.length()));
     }
 
 }
