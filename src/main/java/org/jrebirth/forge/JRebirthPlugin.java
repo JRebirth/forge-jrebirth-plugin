@@ -16,16 +16,16 @@
  */
 package org.jrebirth.forge;
 
-import static org.jrebirth.forge.utils.Constants.createJavaEnumUsingTemplate;
-import static org.jrebirth.forge.utils.Constants.createJavaFileUsingTemplate;
-import static org.jrebirth.forge.utils.Constants.createJavaInterfaceUsingTemplate;
-import static org.jrebirth.forge.utils.Constants.createPackageIfNotExist;
-import static org.jrebirth.forge.utils.Constants.createResourceFileUsingTemplate;
-import static org.jrebirth.forge.utils.Constants.determineFileAvailabilty;
-import static org.jrebirth.forge.utils.Constants.determinePackageAvailability;
-import static org.jrebirth.forge.utils.Constants.firstLetterCaps;
-import static org.jrebirth.forge.utils.Constants.installDependencies;
-import static org.jrebirth.forge.utils.Constants.jrebirthPresentationDependency;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaInterfaceUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createPackageIfNotExist;
+import static org.jrebirth.forge.utils.PluginUtils.createResourceFileUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.determineFileAvailabilty;
+import static org.jrebirth.forge.utils.PluginUtils.determinePackageAvailability;
+import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
+import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -60,8 +60,8 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
-import org.jrebirth.forge.utils.Constants;
-import org.jrebirth.forge.utils.Constants.CreationType;
+import org.jrebirth.forge.utils.PluginUtils;
+import org.jrebirth.forge.utils.PluginUtils.CreationType;
 import org.jrebirth.forge.utils.TemplateSettings;
 
 import freemarker.template.TemplateException;
@@ -187,9 +187,9 @@ public class JRebirthPlugin implements Plugin {
             @Option(name = "name", shortName = "n", required = true, help = "Name of the Command to be created.")
             final String commandName) {
 
-        final int choiceIndex = this.shellPrompt.promptChoice("Which type of Command you like to create ?", Constants.COMMAND_TYPES);
+        final int choiceIndex = this.shellPrompt.promptChoice("Which type of Command you like to create ?", PluginUtils.COMMAND_TYPES);
 
-        createNonUiFiles(CreationType.COMMAND, commandName, out, (String) Constants.COMMAND_TYPES[choiceIndex]);
+        createNonUiFiles(CreationType.COMMAND, commandName, out, (String) PluginUtils.COMMAND_TYPES[choiceIndex]);
     }
 
     /**

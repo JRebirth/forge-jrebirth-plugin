@@ -49,7 +49,7 @@ import freemarker.template.TemplateException;
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  * @author Guruprasad Shenoy <gpshenoy@gmail.com>
  */
-public final class Constants {
+public final class PluginUtils {
 
     /** The Constant TEMPLATE_KEY_PACKAGE. */
     public static final String TEMPLATE_KEY_PACKAGE = "package";
@@ -73,7 +73,7 @@ public final class Constants {
 
     private static Configuration cfg = new Configuration();
     static {
-        cfg.setClassForTemplateLoading(Constants.class, "../../../../template");
+        cfg.setClassForTemplateLoading(PluginUtils.class, "../../../../template");
         cfg.setObjectWrapper(new DefaultObjectWrapper());
     }
 
@@ -115,7 +115,7 @@ public final class Constants {
     /**
      * Private constructor.
      */
-    private Constants() {
+    private PluginUtils() {
     }
 
     /**

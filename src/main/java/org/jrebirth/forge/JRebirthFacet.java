@@ -21,7 +21,7 @@ import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
 
-import static org.jrebirth.forge.utils.Constants.*;
+import static org.jrebirth.forge.utils.PluginUtils.*;
 
 /**
  * JRebirth Facet
