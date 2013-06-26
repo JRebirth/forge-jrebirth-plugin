@@ -2,9 +2,9 @@ package org.jrebirth.forge;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.assertNotNull;
-import static org.jrebirth.forge.utils.Constants.javafxDependency;
-import static org.jrebirth.forge.utils.Constants.jrebirthCoreDependency;
-import static org.jrebirth.forge.utils.Constants.slf4jDependency;
+import static org.jrebirth.forge.utils.PluginUtils.javafxDependency;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
+import static org.jrebirth.forge.utils.PluginUtils.slf4jDependency;
 
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
