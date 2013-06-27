@@ -16,7 +16,6 @@
  */
 package org.jrebirth.forge;
 
-import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaInterfaceUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createPackageIfNotExist;
@@ -26,6 +25,8 @@ import static org.jrebirth.forge.utils.PluginUtils.determinePackageAvailability;
 import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
 import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
+import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -128,6 +129,10 @@ public class JRebirthPlugin implements Plugin {
             directory.getChildDirectory("fonts").mkdir();
             directory.getChildDirectory("images").mkdir();
             directory.getChildDirectory("styles").mkdir();
+            
+            this.project.getProjectRoot().getChildDirectory("src/main/jnlp").mkdir();
+
+            setupMavenProjectProfiles(project,metadata.getTopLevelPackage(), metadata.getProjectName());
 
         }
         if (moduleName != null) {
