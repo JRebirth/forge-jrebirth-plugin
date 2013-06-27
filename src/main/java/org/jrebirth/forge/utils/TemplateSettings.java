@@ -17,7 +17,7 @@ package org.jrebirth.forge.utils;
  *
  * @author Guruprasad Shenoy <gpshenoy@gmail.com>
  */
-public class TemplateSettings {
+public final class TemplateSettings {
 
     /** The is controller create. */
     private boolean isControllerCreate = true;
