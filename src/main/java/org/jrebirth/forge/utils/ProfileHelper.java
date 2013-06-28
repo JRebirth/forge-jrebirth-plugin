@@ -8,6 +8,7 @@ import java.io.StringReader;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jboss.forge.maven.MavenCoreFacet;
@@ -84,12 +85,18 @@ public final class ProfileHelper {
     private static Plugin addMavenWebstartPlugin()
     {
         final Plugin mavenWebstartPlugin = new Plugin();
+        PluginExecution pluginExecution = new PluginExecution();
 
         mavenWebstartPlugin.setGroupId("org.codehaus.mojo");
         mavenWebstartPlugin.setArtifactId("webstart-maven-plugin");
         mavenWebstartPlugin.setVersion(resourceBundle.getString("mavenWebstartVersion"));
+        
+        pluginExecution.addGoal("jnlp");
+        pluginExecution.setPhase("package");
+        
+        mavenWebstartPlugin.addExecution(pluginExecution);
+        
         mavenWebstartPlugin.setConfiguration(buildWebstartPluginConfiguration());
-
 
         return mavenWebstartPlugin;
     }
@@ -130,6 +137,7 @@ public final class ProfileHelper {
     
     private static Object buildWebstartPluginConfiguration() {
         final StringBuffer buffer = new StringBuffer();
+        
         
         buffer.append("<configuration>");
         buffer.append("<jnlpFiles>${jrebirth.jnlp.filename}</jnlpFiles>");
