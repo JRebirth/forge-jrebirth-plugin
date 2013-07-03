@@ -34,6 +34,7 @@ import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.ShellColor;
+import org.jboss.forge.shell.ShellMessages;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.PipeOut;
@@ -69,7 +70,7 @@ public final class PluginUtils {
     public static final Object[] COMMAND_TYPES = { "DefaultCommand", "DefaultUICommand", "DefaultPoolCommand", "DefaultMultiCommand" };
 
     /** The resource bundle. */
-    public static ResourceBundle resourceBundle = ResourceBundle.getBundle("ResourceBundle");
+    public static Messages messages = Messages.INSTANCE;
 
     private static Configuration cfg = new Configuration();
     static {
@@ -133,7 +134,7 @@ public final class PluginUtils {
      * @return the dependency builder
      */
     public static DependencyBuilder jrebirthCoreDependency() {
-        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion(resourceBundle.getString("jrebirthVersion"));
+        return DependencyBuilder.create().setGroupId("org.jrebirth").setArtifactId("core").setVersion(messages.getKeyValue("jrebirthVersion"));
     }
 
     /**
@@ -142,7 +143,7 @@ public final class PluginUtils {
      * @return the dependency builder
      */
     public static DependencyBuilder slf4jDependency() {
-        return DependencyBuilder.create().setGroupId("org.slf4j").setArtifactId("slf4j-simple").setVersion(resourceBundle.getString("slf4jSimpleVersion"));
+        return DependencyBuilder.create().setGroupId("org.slf4j").setArtifactId("slf4j-simple").setVersion(messages.getKeyValue("slf4jSimpleVersion"));
     }
 
     /**
@@ -170,12 +171,12 @@ public final class PluginUtils {
 
         final List<Dependency> versions = dependencyFacet.resolveAvailableVersions(dependency);
         if (askVersion) {
-            final Dependency dep = shell.promptChoiceTyped("What version do you want to install?", versions);
+            final Dependency dep = shell.promptChoiceTyped(messages.getMessage("which.version.to.install"), versions);
             dependency.setVersion(dep.getVersion());
         }
         dependencyFacet.addDirectDependency(dependency);
 
-        writer.println(ShellColor.GREEN, dependency.getGroupId() + ":" + dependency.getArtifactId() + ":" + dependency.getVersion() + " is added to the dependency.");
+        ShellMessages.info(writer, messages.getMessage("dependency.added", dependency.getArtifactId(),dependency.getGroupId(),dependency.getVersion()));
 
     }
 
@@ -187,7 +188,7 @@ public final class PluginUtils {
      */
     public static boolean determinePackageAvailability(final DirectoryResource beansDirectory, final PipeOut out) {
         if (beansDirectory.isDirectory()) {
-            out.println(ShellColor.RED, "Unable to Create package. The package '" + beansDirectory.toString() + "' is already found");
+            ShellMessages.error(out, messages.getMessage("unable.to.create.package", beansDirectory.toString()));
             return false;
         } else {
             beansDirectory.mkdir();
@@ -205,7 +206,7 @@ public final class PluginUtils {
     public static void createPackageIfNotExist(final DirectoryResource directory, final String packageType, final PipeOut out) {
 
         if (directory.isDirectory() == false) {
-            out.println(ShellColor.BLUE, "The " + packageType + " package does not exist. Creating it.");
+            ShellMessages.info(out, messages.getMessage("package.doesnot.exist", packageType));
             directory.mkdir();
         }
     }
@@ -228,7 +229,7 @@ public final class PluginUtils {
             generateFile(project, type, suffix, settings);
 
         } else {
-            out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
+            ShellMessages.error(out, messages.getMessage("file.already.exist", finalName));
         }
     }
 
