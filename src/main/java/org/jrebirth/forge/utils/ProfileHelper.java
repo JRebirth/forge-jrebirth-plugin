@@ -1,6 +1,6 @@
 package org.jrebirth.forge.utils;
 
-import static org.jrebirth.forge.utils.PluginUtils.resourceBundle;
+import static org.jrebirth.forge.utils.PluginUtils.messages;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -42,15 +42,15 @@ public final class ProfileHelper {
     {
         pom.addProperty("project.build.sourceEncoding", "UTF-8");
 
-        pom.addProperty("jrebirthVersion", resourceBundle.getString("jrebirthVersion"));
+        pom.addProperty("jrebirthVersion", messages.getKeyValue("jrebirthVersion"));
 
-        pom.addProperty("javaVersion", resourceBundle.getString("javaJdkVersion"));
+        pom.addProperty("javaVersion", messages.getKeyValue("javaJdkVersion"));
 
         pom.addProperty("appMainClass", topLevelPackageName + "." + projectName + "App");
         pom.addProperty("jnlpFilename", topLevelPackageName + "." + projectName + ".jnlp");
 
-        pom.addProperty("appletWidth", resourceBundle.getString("appletWidth"));
-        pom.addProperty("appletHeight", resourceBundle.getString("appletHeight"));
+        pom.addProperty("appletWidth", messages.getKeyValue("appletWidth"));
+        pom.addProperty("appletHeight", messages.getKeyValue("appletHeight"));
 
         pom.addProperty("deployUrl", "");
         pom.addProperty("deployPath", "");
@@ -62,7 +62,7 @@ public final class ProfileHelper {
 
         mavenJarPlugin.setGroupId("org.apache.maven.plugins");
         mavenJarPlugin.setArtifactId("maven-jar-plugin");
-        mavenJarPlugin.setVersion(resourceBundle.getString("mavenJarVersion"));
+        mavenJarPlugin.setVersion(messages.getKeyValue("mavenJarVersion"));
 
         mavenJarPlugin.setConfiguration(buildJarPluginConfiguration());
 
@@ -75,7 +75,7 @@ public final class ProfileHelper {
 
         mavenCompilePlugin.setGroupId("org.apache.maven.plugins");
         mavenCompilePlugin.setArtifactId("maven-compiler-plugin");
-        mavenCompilePlugin.setVersion(resourceBundle.getString("mavenCompilerVersion"));
+        mavenCompilePlugin.setVersion(messages.getKeyValue("mavenCompilerVersion"));
 
         mavenCompilePlugin.setConfiguration(buildCompilePluginConfiguration());
 
@@ -89,7 +89,7 @@ public final class ProfileHelper {
 
         mavenWebstartPlugin.setGroupId("org.codehaus.mojo");
         mavenWebstartPlugin.setArtifactId("webstart-maven-plugin");
-        mavenWebstartPlugin.setVersion(resourceBundle.getString("mavenWebstartVersion"));
+        mavenWebstartPlugin.setVersion(messages.getKeyValue("mavenWebstartVersion"));
         
         pluginExecution.addGoal("jnlp");
         pluginExecution.setPhase("package");
