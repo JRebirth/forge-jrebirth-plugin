@@ -27,6 +27,7 @@ import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
 import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
+import static org.jrebirth.forge.utils.PluginUtils.messages;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,7 +49,7 @@ import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.project.facets.events.InstallFacets;
 import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.Shell;
-import org.jboss.forge.shell.ShellColor;
+import org.jboss.forge.shell.ShellMessages;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.Command;
@@ -129,10 +130,10 @@ public class JRebirthPlugin implements Plugin {
             directory.getChildDirectory("fonts").mkdir();
             directory.getChildDirectory("images").mkdir();
             directory.getChildDirectory("styles").mkdir();
-            
+
             this.project.getProjectRoot().getChildDirectory("src/main/jnlp").mkdir();
 
-            setupMavenProjectProfiles(project,metadata.getTopLevelPackage(), metadata.getProjectName());
+            setupMavenProjectProfiles(project, metadata.getTopLevelPackage(), metadata.getProjectName());
 
         }
         if (moduleName != null) {
@@ -151,9 +152,9 @@ public class JRebirthPlugin implements Plugin {
     @DefaultCommand
     public void defaultCommand(final PipeOut out) {
         if (this.project.hasFacet(JRebirthFacet.class)) {
-            out.println("JRebirth is installed.");
+            ShellMessages.info(out,messages.getMessage("jrebirth.is.installed"));
         } else {
-            out.println("JRebirth is not installed. Use 'jrebirth setup' to install.");
+            ShellMessages.warn(out,messages.getMessage("jrebirth.is.not.installed"));
         }
     }
 
@@ -167,14 +168,15 @@ public class JRebirthPlugin implements Plugin {
      * @param fxmlGenerate the fxml generate
      */
     @Command(value = "ui-create", help = "Create Model,View and Controller for the given name")
-    public void createMVC(final PipeOut out,
+    public void createMVC(
+            final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the UI Group to be created.")
             final String name,
             @Option(name = "controllerGenerate", shortName = "cg", required = false, defaultValue = "true", help = "If true, Controller will be generated for the MVC.")
             final boolean controllerGenerate,
             @Option(name = "beanGenerate", shortName = "bg", required = false, defaultValue = "true", help = "If true, Bean will be generated for the MVC.")
             final boolean beanGenerate,
-            @Option(name = "fxmlGenerate", shortName = "fg", required = false, defaultValue = "false", help = "If true, FXML document will be generated for the MVC in resource folder.")
+            @Option(name = "fxmlGenerate", shortName = "fg", required = false, flagOnly = true, defaultValue = "false", help = "If true, FXML document will be generated for the MVC in resource folder.")
             final boolean fxmlGenerate
 
             ) {
@@ -220,11 +222,11 @@ public class JRebirthPlugin implements Plugin {
     public void createResource(final PipeOut out,
             @Option(name = "all", shortName = "a", required = true, help = "Generate all the resource")
             final boolean allResource,
-            @Option(name = "colorGenerate", shortName = "cg", required = false, help = "Generate resource for Colors")
+            @Option(name = "colorGenerate", shortName = "cg", flagOnly = true, required = false, help = "Generate resource for Colors")
             final boolean colorGenerate,
-            @Option(name = "fontGenerate", shortName = "fg", required = false, help = "Generate resource for Fonts")
+            @Option(name = "fontGenerate", shortName = "fg", flagOnly = true, required = false, help = "Generate resource for Fonts")
             final boolean fontGenerate,
-            @Option(name = "imageGenerate", shortName = "ig", required = false, help = "Generate resource for Images")
+            @Option(name = "imageGenerate", shortName = "ig", flagOnly = true, required = false, help = "Generate resource for Images")
             final boolean imageGenerate) {
         createResourceFiles(out, allResource, colorGenerate, fontGenerate, imageGenerate);
     }
@@ -250,10 +252,10 @@ public class JRebirthPlugin implements Plugin {
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
         if (directory.isDirectory() == false || directory.getChild(metadata.getProjectName() + "Colors.java").exists() == false) {
             try {
-                out.println(ShellColor.BLUE, "Color resources is not yet created. Creating a new one.");
-                this.shell.execute("jrebirth resource-create --all false --colorGenerate true");
+                ShellMessages.info(out, messages.getMessage("color.is.not.created"));
+                this.shell.execute("jrebirth resource-create --all false --colorGenerate");
             } catch (final Exception e) {
-                out.println(ShellColor.RED, "Unable to create resource files for colors.");
+                ShellMessages.error(out, messages.getMessage("unable.to.create.color"));
                 e.printStackTrace();
             }
         }
@@ -268,12 +270,12 @@ public class JRebirthPlugin implements Plugin {
                 java.saveJavaSource(jInterface);
             } catch (final FileNotFoundException e) {
 
-                out.println(ShellColor.RED, "Unable to save the file while writing the variable (" + capsColorName + ").");
+                ShellMessages.error(out, messages.getMessage("unable.to.save.file", capsColorName));
                 e.printStackTrace();
             }
         }
         else {
-            out.println(ShellColor.RED, "The color constant " + capsColorName + " is already exist. Skipping.");
+            ShellMessages.warn(out, messages.getMessage("color.constant.already.exist", capsColorName));
         }
 
     }
@@ -315,8 +317,8 @@ public class JRebirthPlugin implements Plugin {
         if (fxmlGenerate)
         {
             final DirectoryResource resourceDir = this.project.getFacet(ResourceFacet.class).getResourceFolder();
-            createPackageIfNotExist(resourceDir.getChildDirectory("ui"), "", out);
-            createPackageIfNotExist(resourceDir.getChildDirectory("ui").getChildDirectory("fxml"), "", out);
+            createPackageIfNotExist(resourceDir.getChildDirectory("ui"), "UI", out);
+            createPackageIfNotExist(resourceDir.getChildDirectory("ui").getChildDirectory("fxml"), "FXML", out);
 
             determineFileAvailabilty(this.project, resourceDir, CreationType.FXML, javaStandardClassName, out, "", ".fxml", settings);
         }
@@ -372,7 +374,7 @@ public class JRebirthPlugin implements Plugin {
             determineFileAvailabilty(this.project, directory, type, finalName, out, "", ".java", settings);
 
         } catch (final Exception e) {
-            out.println(ShellColor.RED, "Could not create files.");
+            ShellMessages.error(out, messages.getMessage("could.not.create.file"));
         }
     }
 
@@ -413,12 +415,12 @@ public class JRebirthPlugin implements Plugin {
                 }
 
             } else {
-                out.println(ShellColor.RED, "The file '" + finalName + "' already exists");
+                ShellMessages.error(out, messages.getMessage("file.already.exist",finalName));
             }
 
         } catch (final Exception e) {
             e.printStackTrace();
-            out.println(ShellColor.RED, "Could not create files.");
+            ShellMessages.error(out, messages.getMessage("could.not.create.file"));
         }
     }
 
