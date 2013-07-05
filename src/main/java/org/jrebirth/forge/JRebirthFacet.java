@@ -16,6 +16,7 @@ import javax.inject.Inject;
 
 import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
+import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
@@ -70,7 +71,12 @@ public class JRebirthFacet extends BaseFacet {
      */
     @Override
     public boolean isInstalled() {
-        if (this.project.hasFacet(JRebirthFacet.class)) {
+
+        DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
+        ResourceFacet resources = project.getFacet(ResourceFacet.class);
+
+        if (dFacet.hasDirectDependency(jrebirthCoreDependency()) && dFacet.hasRepository("http://repo.jrebirth.org/libs-release") 
+                && resources.getResource("jrebirth.properties").exists()) {
             return true;
         }
 

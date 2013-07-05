@@ -28,6 +28,7 @@ import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependenc
 import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
 import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
 import static org.jrebirth.forge.utils.PluginUtils.messages;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -150,11 +151,24 @@ public class JRebirthPlugin implements Plugin {
      * @param out the out
      */
     @DefaultCommand
-    public void defaultCommand(final PipeOut out) {
-        if (this.project.hasFacet(JRebirthFacet.class)) {
-            ShellMessages.info(out,messages.getMessage("jrebirth.is.installed"));
-        } else {
-            ShellMessages.warn(out,messages.getMessage("jrebirth.is.not.installed"));
+    public void defaultCommand(final PipeOut out,
+            @Option(name = "all", shortName = "a", flagOnly = true, defaultValue = "false", help = "Finds and displays all the detail regardign this JRebirth project.")
+            final boolean allDetails,
+            @Option(name = "jrebirthVersion", shortName = "jrv", flagOnly = true, defaultValue = "false", help = "Finds and displays JRebirht version added to this project.")
+            final boolean jrebirthVersion) {
+
+        DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
+
+        if (allDetails || jrebirthVersion)
+        {
+            ShellMessages.info(out, "JRebirth Version : " + (dFacet.getDirectDependency(jrebirthCoreDependency()).getVersion()));
+        }
+        else {
+            if (this.project.hasFacet(JRebirthFacet.class)) {
+                ShellMessages.info(out, messages.getMessage("jrebirth.is.installed"));
+            } else {
+                ShellMessages.warn(out, messages.getMessage("jrebirth.is.not.installed"));
+            }
         }
     }
 
@@ -415,7 +429,7 @@ public class JRebirthPlugin implements Plugin {
                 }
 
             } else {
-                ShellMessages.error(out, messages.getMessage("file.already.exist",finalName));
+                ShellMessages.error(out, messages.getMessage("file.already.exist", finalName));
             }
 
         } catch (final Exception e) {
