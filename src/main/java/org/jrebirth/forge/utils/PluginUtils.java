@@ -176,7 +176,7 @@ public final class PluginUtils {
         }
         dependencyFacet.addDirectDependency(dependency);
 
-        ShellMessages.info(writer, messages.getMessage("dependency.added", dependency.getArtifactId(),dependency.getGroupId(),dependency.getVersion()));
+        ShellMessages.info(writer, messages.getMessage("dependency.added", dependency.getArtifactId(), dependency.getGroupId(), dependency.getVersion()));
 
     }
 
@@ -244,7 +244,6 @@ public final class PluginUtils {
     public static void generateFile(final Project project, final CreationType fileType, final String suffix, TemplateSettings settings)
     {
 
-        FileWriter fileWriter = null;
         String template = "";
         Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
 
@@ -295,16 +294,6 @@ public final class PluginUtils {
             te.printStackTrace();
         } catch (IOException ioe) {
             ioe.printStackTrace();
-        } finally {
-
-            if (fileWriter != null) {
-                try {
-                    fileWriter.close();
-                } catch (IOException ioe) {
-
-                }
-            }
-
         }
 
     }
@@ -365,7 +354,7 @@ public final class PluginUtils {
         java.saveJavaSource(javaEnum);
 
     }
-    
+
     public static String firstLetterCaps(String text) {
         return String.valueOf(text.charAt(0)).toUpperCase().concat(text.substring(1, text.length()));
     }
