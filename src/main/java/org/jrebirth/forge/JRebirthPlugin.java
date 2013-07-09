@@ -30,12 +30,16 @@ import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
 import static org.jrebirth.forge.utils.PluginUtils.messages;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -63,6 +67,7 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
+import org.jrebirth.forge.completer.AppPropertyCompleter;
 import org.jrebirth.forge.utils.PluginUtils;
 import org.jrebirth.forge.utils.PluginUtils.CreationType;
 import org.jrebirth.forge.utils.TemplateSettings;
@@ -290,6 +295,41 @@ public class JRebirthPlugin implements Plugin {
         }
         else {
             ShellMessages.warn(out, messages.getMessage("color.constant.already.exist", capsColorName));
+        }
+
+    }
+
+    /**
+     * Application Configure command.
+     * 
+     * @param out the out
+     * @param key the key
+     * @param value the value
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
+    @Command(value = "app-config", help = "Create a service for the given name")
+    public void appConfig(final PipeOut out,
+            @Option(name = "key", shortName = "k", completer = AppPropertyCompleter.class, required = true, help = "Name of the Service to be created.")
+            final String key,
+            @Option(name = "value", shortName = "v", help = "Name of the Service to be created.")
+            final String value) throws IOException {
+
+        final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
+        Properties prop = new Properties();
+        try {
+            prop.load(resourceFacet.getResource("jrebirth.properties").getResourceInputStream());
+        } catch (IOException e) {
+            ShellMessages.error(out, messages.getMessage("unable.to.read.properties.file"));
+            return;
+        }
+        
+        if (value == null)
+            out.println(key + " = " + prop.getProperty(key));
+        else {
+            prop.setProperty(key, value);
+            File fxmlFile = resourceFacet.createResource(new char[0], "jrebirth.properties").getUnderlyingResourceObject();
+            FileWriter wri  = new FileWriter(fxmlFile);
+            prop.store(wri, "");
         }
 
     }
