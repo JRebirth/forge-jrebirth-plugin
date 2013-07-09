@@ -16,6 +16,8 @@
  */
 package org.jrebirth.forge;
 
+import static org.jrebirth.forge.utils.PluginUtils.createJNLPConfiguration;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaInterfaceUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createPackageIfNotExist;
@@ -25,17 +27,14 @@ import static org.jrebirth.forge.utils.PluginUtils.determinePackageAvailability;
 import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
 import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
-import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
 import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
 import static org.jrebirth.forge.utils.PluginUtils.messages;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -82,7 +81,7 @@ import freemarker.template.TemplateException;
  */
 @Alias("jrebirth")
 @Help("A Forge addon to enable and work on JRebirth framework.")
-@RequiresFacet({ DependencyFacet.class, JavaSourceFacet.class })
+@RequiresFacet({ DependencyFacet.class, JavaSourceFacet.class, ResourceFacet.class })
 @RequiresProject
 public class JRebirthPlugin implements Plugin {
 
@@ -136,10 +135,10 @@ public class JRebirthPlugin implements Plugin {
             directory.getChildDirectory("fonts").mkdir();
             directory.getChildDirectory("images").mkdir();
             directory.getChildDirectory("styles").mkdir();
+            
+            createJNLPConfiguration(project);
 
-            this.project.getProjectRoot().getChildDirectory("src/main/jnlp").mkdir();
-
-            setupMavenProjectProfiles(project, metadata.getTopLevelPackage(), metadata.getProjectName());
+            setupMavenProjectProfiles(project,metadata.getTopLevelPackage(), metadata.getProjectName());
 
         }
         if (moduleName != null) {

@@ -12,15 +12,16 @@
  */
 package org.jrebirth.forge.utils;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaClass;
@@ -33,7 +34,6 @@ import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.resources.DirectoryResource;
-import org.jboss.forge.shell.ShellColor;
 import org.jboss.forge.shell.ShellMessages;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
@@ -357,6 +357,32 @@ public final class PluginUtils {
 
     public static String firstLetterCaps(String text) {
         return String.valueOf(text.charAt(0)).toUpperCase().concat(text.substring(1, text.length()));
+    }
+
+    public static void createJNLPConfiguration(final Project project) throws IOException, TemplateException {
+
+        project.getProjectRoot().getChildDirectory("src/main/jnlp").mkdir();
+
+        DirectoryResource dir = project.getProjectRoot().getChildDirectory("src/main/jnlp");
+        File jnlpTemplate = new File(dir.getUnderlyingResourceObject().getPath() + System.getProperty("file.separator") + "template.vm");
+
+        InputStream is = PluginUtils.class.getResourceAsStream("/template/jnlpTemplate.vm");
+        byte[] data = new byte[3072];
+
+        int bufferSize = is.read(data);
+        is.close();
+
+        FileWriter writer = new FileWriter(jnlpTemplate);
+        BufferedWriter bWriter = new BufferedWriter(writer);
+
+        for (int i = 0; i < bufferSize; i++) {
+
+            bWriter.append((char) data[i]);
+        }
+
+        bWriter.flush();
+        bWriter.close();
+
     }
 
 }
