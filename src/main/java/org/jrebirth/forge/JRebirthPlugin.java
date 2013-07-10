@@ -26,15 +26,16 @@ import static org.jrebirth.forge.utils.PluginUtils.determineFileAvailabilty;
 import static org.jrebirth.forge.utils.PluginUtils.determinePackageAvailability;
 import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
 import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
-import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
-import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
-import static org.jrebirth.forge.utils.PluginUtils.messages;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
+import static org.jrebirth.forge.utils.PluginUtils.messages;
+import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -89,6 +90,7 @@ public class JRebirthPlugin implements Plugin {
     @Inject
     private ShellPrompt shellPrompt;
 
+    /** The shell. */
     @Inject
     private Shell shell;
 
@@ -105,8 +107,8 @@ public class JRebirthPlugin implements Plugin {
      * 
      * @param out the out
      * @param moduleName the module name
-     * @throws TemplateException
-     * @throws IOException
+     * @throws IOException Signals that an I/O exception has occurred.
+     * @throws TemplateException the template exception
      */
     @SetupCommand(help = "Installs basic setup to work with JRebirth Framework.")
     public void setup(final PipeOut out, @Option(name = "module", shortName = "m", help = "The Module name to be installed.")
@@ -135,10 +137,11 @@ public class JRebirthPlugin implements Plugin {
             directory.getChildDirectory("fonts").mkdir();
             directory.getChildDirectory("images").mkdir();
             directory.getChildDirectory("styles").mkdir();
-            
-            createJNLPConfiguration(project);
 
-            setupMavenProjectProfiles(project,metadata.getTopLevelPackage(), metadata.getProjectName());
+            createJNLPConfiguration(this.project);
+            ShellMessages.warn(out, messages.getMessage("jnlp.dependency.is.setup"));
+
+            setupMavenProjectProfiles(this.project, metadata.getTopLevelPackage(), metadata.getProjectName());
 
         }
         if (moduleName != null) {
@@ -153,6 +156,8 @@ public class JRebirthPlugin implements Plugin {
      * If jrebirth command is not executed with any argument this method will be called.
      * 
      * @param out the out
+     * @param allDetails the all details
+     * @param jrebirthVersion the jrebirth version
      */
     @DefaultCommand
     public void defaultCommand(final PipeOut out,
@@ -161,11 +166,11 @@ public class JRebirthPlugin implements Plugin {
             @Option(name = "jrebirthVersion", shortName = "jrv", flagOnly = true, defaultValue = "false", help = "Finds and displays JRebirht version added to this project.")
             final boolean jrebirthVersion) {
 
-        DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
+        final DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
 
         if (allDetails || jrebirthVersion)
         {
-            ShellMessages.info(out, "JRebirth Version : " + (dFacet.getDirectDependency(jrebirthCoreDependency()).getVersion()));
+            ShellMessages.info(out, "JRebirth Version : " + dFacet.getDirectDependency(jrebirthCoreDependency()).getVersion());
         }
         else {
             if (this.project.hasFacet(JRebirthFacet.class)) {
@@ -234,7 +239,10 @@ public class JRebirthPlugin implements Plugin {
      * Creates the resource.
      * 
      * @param out the out
-     * @param resourceName the resource name
+     * @param allResource the all resource
+     * @param colorGenerate the color generate
+     * @param fontGenerate the font generate
+     * @param imageGenerate the image generate
      */
     @Command(value = "resource-create", help = "Create a resource for the given name")
     public void createResource(final PipeOut out,
@@ -250,10 +258,11 @@ public class JRebirthPlugin implements Plugin {
     }
 
     /**
-     * Add color to color resource
+     * Add color to color resource.
      * 
      * @param out the out
-     * 
+     * @param colorName the color name
+     * @param hexValue the hex value
      */
     @Command(value = "color-add-web", help = "Add color to color resource")
     public void colorAddWeb(final PipeOut out,
@@ -274,7 +283,6 @@ public class JRebirthPlugin implements Plugin {
                 this.shell.execute("jrebirth resource-create --all false --colorGenerate");
             } catch (final Exception e) {
                 ShellMessages.error(out, messages.getMessage("unable.to.create.color"));
-                e.printStackTrace();
             }
         }
         final JavaSourceFacet java = this.project.getFacet(JavaSourceFacet.class);
@@ -287,9 +295,7 @@ public class JRebirthPlugin implements Plugin {
             try {
                 java.saveJavaSource(jInterface);
             } catch (final FileNotFoundException e) {
-
                 ShellMessages.error(out, messages.getMessage("unable.to.save.file", capsColorName));
-                e.printStackTrace();
             }
         }
         else {
@@ -304,33 +310,55 @@ public class JRebirthPlugin implements Plugin {
      * @param out the out
      * @param key the key
      * @param value the value
+     * @param showAll the show all
      * @throws IOException Signals that an I/O exception has occurred.
      */
     @Command(value = "app-config", help = "Create a service for the given name")
     public void appConfig(final PipeOut out,
-            @Option(name = "key", shortName = "k", completer = AppPropertyCompleter.class, required = true, help = "Name of the Service to be created.")
+            @Option(name = "key", shortName = "k", completer = AppPropertyCompleter.class, help = "Key name in the property file.")
             final String key,
-            @Option(name = "value", shortName = "v", help = "Name of the Service to be created.")
-            final String value) throws IOException {
+            @Option(name = "value", shortName = "v", help = "New value for the key")
+            final String value,
+            @Option(name = "showAll", shortName = "a", flagOnly = true, defaultValue = "false", help = "Show all the application properties")
+            final boolean showAll) throws IOException {
 
-        final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-        Properties prop = new Properties();
+        final ResourceFacet resourceFacet = this.project.getFacet(ResourceFacet.class);
+        final Properties prop = new Properties();
         try {
             prop.load(resourceFacet.getResource("jrebirth.properties").getResourceInputStream());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             ShellMessages.error(out, messages.getMessage("unable.to.read.properties.file"));
             return;
         }
-        
-        if (value == null)
+
+        if (value == null && key != null) {
             out.println(key + " = " + prop.getProperty(key));
-        else {
+        }
+        if (value != null) {
+
+            if (key == null) {
+                ShellMessages.error(out, messages.getMessage("key.is.not.set"));
+                return;
+            }
+
+            if (prop.containsKey(key) == false) {
+                ShellMessages.info(out, messages.getMessage("given.key.not.found"));
+            }
+
             prop.setProperty(key, value);
-            File fxmlFile = resourceFacet.createResource(new char[0], "jrebirth.properties").getUnderlyingResourceObject();
-            FileWriter wri  = new FileWriter(fxmlFile);
+            final File fxmlFile = resourceFacet.createResource(new char[0], "jrebirth.properties").getUnderlyingResourceObject();
+            final FileWriter wri = new FileWriter(fxmlFile);
             prop.store(wri, "");
         }
 
+        if (showAll) {
+            final Enumeration<Object> enu = prop.keys();
+            String keyName = "";
+            while (enu.hasMoreElements()) {
+                keyName = (String) enu.nextElement();
+                out.println(keyName + " = " + prop.getProperty(keyName));
+            }
+        }
     }
 
     /**
@@ -340,7 +368,8 @@ public class JRebirthPlugin implements Plugin {
      * @param type the type
      * @param name the name
      * @param controllerGenerate the controller generate
-     * @param beanGenerate the bean generate . * @param fxmlGenerate the fxml generate
+     * @param beanGenerate the bean generate . 
+     * @param fxmlGenerate the fxml generate
      */
     private void createUiFiles(final PipeOut out, final CreationType type, final String name, final boolean controllerGenerate, final boolean beanGenerate, final boolean fxmlGenerate) {
 
@@ -399,6 +428,7 @@ public class JRebirthPlugin implements Plugin {
      * @param type the type
      * @param fileName the file name
      * @param out the out
+     * @param commandType the command type
      */
     private void createNonUiFiles(final CreationType type, final String fileName, final PipeOut out, final String commandType) {
 
@@ -431,6 +461,15 @@ public class JRebirthPlugin implements Plugin {
         }
     }
 
+    /**
+     * Creates the resource files.
+     * 
+     * @param out the out
+     * @param allResource the all resource
+     * @param colorGenerate the color generate
+     * @param fontGenerate the font generate
+     * @param imageGenerate the image generate
+     */
     private void createResourceFiles(final PipeOut out, final boolean allResource, final boolean colorGenerate, final boolean fontGenerate, final boolean imageGenerate) {
 
         DirectoryResource directory = null;

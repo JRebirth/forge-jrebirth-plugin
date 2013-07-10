@@ -47,7 +47,7 @@ public final class ProfileHelper {
         pom.addProperty("javaVersion", messages.getKeyValue("javaJdkVersion"));
 
         pom.addProperty("appMainClass", topLevelPackageName + "." + projectName + "App");
-        pom.addProperty("jnlpFilename", topLevelPackageName + "." + projectName + ".jnlp");
+        pom.addProperty("jnlpFilename", projectName + ".jnlp");
 
         pom.addProperty("appletWidth", messages.getKeyValue("appletWidth"));
         pom.addProperty("appletHeight", messages.getKeyValue("appletHeight"));
