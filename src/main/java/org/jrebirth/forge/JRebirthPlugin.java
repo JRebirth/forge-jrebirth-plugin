@@ -82,7 +82,7 @@ import freemarker.template.TemplateException;
  */
 @Alias("jrebirth")
 @Help("A Forge addon to enable and work on JRebirth framework.")
-@RequiresFacet({ DependencyFacet.class, JavaSourceFacet.class, ResourceFacet.class })
+@RequiresFacet({ DependencyFacet.class, JavaSourceFacet.class, ResourceFacet.class, JRebirthFacet.class })
 @RequiresProject
 public class JRebirthPlugin implements Plugin {
 
@@ -195,9 +195,9 @@ public class JRebirthPlugin implements Plugin {
             final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the UI Group to be created.")
             final String name,
-            @Option(name = "controllerGenerate", shortName = "cg", required = false, defaultValue = "true", help = "If true, Controller will be generated for the MVC.")
+            @Option(name = "controllerGenerate", shortName = "cg", required = false, flagOnly = true, defaultValue = "true", help = "If true, Controller will be generated for the MVC.")
             final boolean controllerGenerate,
-            @Option(name = "beanGenerate", shortName = "bg", required = false, defaultValue = "true", help = "If true, Bean will be generated for the MVC.")
+            @Option(name = "beanGenerate", shortName = "bg", required = false, flagOnly = true, defaultValue = "true", help = "If true, Bean will be generated for the MVC.")
             final boolean beanGenerate,
             @Option(name = "fxmlGenerate", shortName = "fg", required = false, flagOnly = true, defaultValue = "false", help = "If true, FXML document will be generated for the MVC in resource folder.")
             final boolean fxmlGenerate
@@ -368,7 +368,7 @@ public class JRebirthPlugin implements Plugin {
      * @param type the type
      * @param name the name
      * @param controllerGenerate the controller generate
-     * @param beanGenerate the bean generate . 
+     * @param beanGenerate the bean generate .
      * @param fxmlGenerate the fxml generate
      */
     private void createUiFiles(final PipeOut out, final CreationType type, final String name, final boolean controllerGenerate, final boolean beanGenerate, final boolean fxmlGenerate) {
