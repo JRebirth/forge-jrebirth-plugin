@@ -307,6 +307,7 @@ public final class PluginUtils {
         FileWriter fileWriter = new FileWriter(fileObj);
         template.process(context, fileWriter);
         fileWriter.flush();
+        fileWriter.close();
 
     }
 
