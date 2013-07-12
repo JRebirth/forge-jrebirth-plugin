@@ -265,7 +265,8 @@ public final class PluginUtils {
                     break;
                 case FXML:
                     final ResourceFacet resourceFacet = project.getFacet(ResourceFacet.class);
-                    File fxmlFile = resourceFacet.createResource(new char[0], settings.getImportPackage().replaceAll(".", "/") + "/ui/" + settings.getName() + ".fxml").getUnderlyingResourceObject();
+                    File fxmlFile = resourceFacet.createResource(new char[0], settings.getImportPackage().replaceAll("\\.", "/") + "/ui/fxml/" + settings.getName() + ".fxml")
+                            .getUnderlyingResourceObject();
                     createResourceFileUsingTemplate(project, "TemplateFXML.ftl", fxmlFile, context);
                     break;
                 case COMMAND:
@@ -384,6 +385,32 @@ public final class PluginUtils {
         bWriter.flush();
         bWriter.close();
 
+    }
+
+    /**
+     * Creates the package if not exist.
+     * 
+     * @param directory the directory
+     * @param packageType the package type
+     * @param out the out
+     */
+    public static void createFullPackageIfNotExist(final DirectoryResource directory, String fullPackageName, final PipeOut out) {
+
+        String packageType;
+        String[] children;
+
+        if (fullPackageName.contains(".")) {
+            children = fullPackageName.split("\\.");
+        } else {
+            children = new String[] { fullPackageName };
+        }
+
+        DirectoryResource childDirectory = directory;
+        for (int i = 0; i < children.length; i++) {
+            packageType = children[i];
+            childDirectory = childDirectory.getChildDirectory(children[i]);
+            createPackageIfNotExist(childDirectory, packageType, out);
+        }
     }
 
 }

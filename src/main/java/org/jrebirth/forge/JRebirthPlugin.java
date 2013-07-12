@@ -16,6 +16,7 @@
  */
 package org.jrebirth.forge;
 
+import static org.jrebirth.forge.utils.PluginUtils.createFullPackageIfNotExist;
 import static org.jrebirth.forge.utils.PluginUtils.createJNLPConfiguration;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
 import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
@@ -399,9 +400,8 @@ public class JRebirthPlugin implements Plugin {
         if (fxmlGenerate)
         {
             final DirectoryResource resourceDir = this.project.getFacet(ResourceFacet.class).getResourceFolder();
-            createPackageIfNotExist(resourceDir.getChildDirectory("ui"), "UI", out);
-            createPackageIfNotExist(resourceDir.getChildDirectory("ui").getChildDirectory("fxml"), "FXML", out);
 
+            createFullPackageIfNotExist(resourceDir, settings.getImportPackage() + ".ui.fxml", out);          
             determineFileAvailabilty(this.project, resourceDir, CreationType.FXML, javaStandardClassName, out, "", ".fxml", settings);
         }
 
