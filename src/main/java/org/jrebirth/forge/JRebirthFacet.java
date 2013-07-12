@@ -12,17 +12,19 @@
  */
 package org.jrebirth.forge;
 
+import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
+import static org.jrebirth.forge.utils.PluginUtils.javafxDependency;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
+import static org.jrebirth.forge.utils.PluginUtils.slf4jDependency;
+
 import javax.inject.Inject;
 
 import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
-import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
-
-import static org.jrebirth.forge.utils.PluginUtils.*;
 
 /**
  * JRebirth Facet
@@ -73,10 +75,8 @@ public class JRebirthFacet extends BaseFacet {
     public boolean isInstalled() {
 
         DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
-        ResourceFacet resources = project.getFacet(ResourceFacet.class);
 
-        if (dFacet.hasDirectDependency(jrebirthCoreDependency()) && dFacet.hasRepository("http://repo.jrebirth.org/libs-release") 
-                && resources.getResource("jrebirth.properties").exists()) {
+        if (dFacet.hasDirectDependency(jrebirthCoreDependency()) && dFacet.hasRepository("http://repo.jrebirth.org/libs-release")) {
             return true;
         }
 
