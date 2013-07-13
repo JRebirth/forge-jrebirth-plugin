@@ -16,24 +16,7 @@
  */
 package org.jrebirth.forge;
 
-import static org.jrebirth.forge.utils.PluginUtils.createFullPackageIfNotExist;
-import static org.jrebirth.forge.utils.PluginUtils.createJNLPConfiguration;
-import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
-import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
-import static org.jrebirth.forge.utils.PluginUtils.createJavaInterfaceUsingTemplate;
-import static org.jrebirth.forge.utils.PluginUtils.createPackageIfNotExist;
-import static org.jrebirth.forge.utils.PluginUtils.createResourceFileUsingTemplate;
-import static org.jrebirth.forge.utils.PluginUtils.determineFileAvailabilty;
-import static org.jrebirth.forge.utils.PluginUtils.determinePackageAvailability;
-import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
-import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
-import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
-import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
-import static org.jrebirth.forge.utils.PluginUtils.messages;
-import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -45,8 +28,14 @@ import java.util.Properties;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
-import org.jboss.forge.parser.JavaParser;
-import org.jboss.forge.parser.java.JavaInterface;
+import freemarker.template.TemplateException;
+
+import org.jrebirth.forge.completer.AppPropertyCompleter;
+import org.jrebirth.forge.utils.PluginUtils;
+import org.jrebirth.forge.utils.PluginUtils.CreationType;
+import org.jrebirth.forge.utils.ResourceUtils;
+import org.jrebirth.forge.utils.TemplateSettings;
+
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
@@ -68,12 +57,22 @@ import org.jboss.forge.shell.plugins.RequiresFacet;
 import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.plugins.SetupCommand;
 import org.jboss.forge.shell.util.Packages;
-import org.jrebirth.forge.completer.AppPropertyCompleter;
-import org.jrebirth.forge.utils.PluginUtils;
-import org.jrebirth.forge.utils.PluginUtils.CreationType;
-import org.jrebirth.forge.utils.TemplateSettings;
 
-import freemarker.template.TemplateException;
+import static org.jrebirth.forge.utils.PluginUtils.createFullPackageIfNotExist;
+import static org.jrebirth.forge.utils.PluginUtils.createJNLPConfiguration;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaEnumUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaInterfaceUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createPackageIfNotExist;
+import static org.jrebirth.forge.utils.PluginUtils.createResourceFileUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.determineFileAvailabilty;
+import static org.jrebirth.forge.utils.PluginUtils.determinePackageAvailability;
+import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
+import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
+import static org.jrebirth.forge.utils.PluginUtils.jrebirthPresentationDependency;
+import static org.jrebirth.forge.utils.PluginUtils.messages;
+import static org.jrebirth.forge.utils.ProfileHelper.setupMavenProjectProfiles;
 
 /**
  * The main plugin for JRebirth.
@@ -259,50 +258,103 @@ public class JRebirthPlugin implements Plugin {
     }
 
     /**
-     * Add color to color resource.
+     * Add gray color to color resource.
      * 
      * @param out the out
      * @param colorName the color name
      * @param hexValue the hex value
      */
-    @Command(value = "color-add-web", help = "Add color to color resource")
+    @Command(value = "color-add-gray", help = "Add gray color to color resource")
+    public void colorAddGray(final PipeOut out,
+            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
+            final String colorName,
+            @Option(name = "gray", shortName = "g", required = true, help = "Color's gray value [0.0-1.0]")
+            final String grayValue,
+            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
+            final double opacityValue) {
+
+        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new GrayColor(\"" + grayValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
+        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
+    }
+
+    /**
+     * Add HSB color to color resource.
+     * 
+     * @param out the out
+     * @param colorName the color name
+     * @param hsbValue the Hue,Saturation,Brightness values separated by comma
+     */
+    @Command(value = "color-add-hsb", help = "Add HSB color to color resource")
+    public void colorAddHSB(final PipeOut out,
+            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
+            final String colorName,
+            @Option(name = "hsb", shortName = "h", required = true, help = "Color's hue,saturation, brightness [0.0-360.0],[0.0-1.0],[0.0-1.0]")
+            final String hsbValue,
+            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
+            final double opacityValue) {
+
+        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new HSBColor(\"" + hsbValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
+        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
+    }
+
+    /**
+     * Add RGB 01 color to color resource.
+     * 
+     * @param out the out
+     * @param colorName the color name
+     * @param rgb the Red,Green,Blue values separated by comma [0.0-1.0]
+     */
+    @Command(value = "color-add-rgb01", help = "Add RGB 01 color to color resource")
+    public void colorAddRGB01(final PipeOut out,
+            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
+            final String colorName,
+            @Option(name = "rgb", shortName = "r", required = true, help = "Color's Red,Green,Blue [0.0-1.0],[0.0-1.0],[0.0-1.0]")
+            final String rgbValue,
+            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
+            final double opacityValue) {
+
+        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new RGB01Color(\"" + rgbValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
+        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
+    }
+
+    /**
+     * Add RGB 255 color to color resource.
+     * 
+     * @param out the out
+     * @param colorName the color name
+     * @param rgb the Red,Green,Blue values separated by comma [0-255]
+     */
+    @Command(value = "color-add-rgb255", help = "Add RGB 255 color to color resource")
+    public void colorAddRGB255(final PipeOut out,
+            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
+            final String colorName,
+            @Option(name = "rgb", shortName = "r", required = true, help = "Color's Red,Green,Blue [0-255],[0-255],[0-255]")
+            final String rgbValue,
+            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
+            final double opacityValue) {
+
+        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new RGB255Color(\"" + rgbValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
+        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
+    }
+
+    /**
+     * Add web color to color resource.
+     * 
+     * @param out the out
+     * @param colorName the color name
+     * @param hexValue the hex value
+     */
+    @Command(value = "color-add-web", help = "Add web color to color resource")
     public void colorAddWeb(final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
             final String colorName,
             @Option(name = "hex", shortName = "h", required = true, help = "Color's hex value")
-            final String hexValue) {
+            final String hexValue,
+            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
+            final double opacityValue) {
 
-        DirectoryResource directory = null;
-        final MetadataFacet metadata = this.project.getFacet(MetadataFacet.class);
-        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
-        final String topLevelPackage = metadata.getTopLevelPackage();
-
-        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
-        if (directory.isDirectory() == false || directory.getChild(metadata.getProjectName() + "Colors.java").exists() == false) {
-            try {
-                ShellMessages.info(out, messages.getMessage("color.is.not.created"));
-                this.shell.execute("jrebirth resource-create --all false --colorGenerate");
-            } catch (final Exception e) {
-                ShellMessages.error(out, messages.getMessage("unable.to.create.color"));
-            }
-        }
-        final JavaSourceFacet java = this.project.getFacet(JavaSourceFacet.class);
-        final JavaInterface jInterface = JavaParser.parse(JavaInterface.class, directory.getChild(metadata.getProjectName() + "Colors.java").getResourceInputStream());
-        final String capsColorName = colorName.toUpperCase();
-
-        if (jInterface.hasField(capsColorName) == false) {
-            jInterface.addField("/** Color constant for " + capsColorName + "  */ \n ColorItem " + capsColorName + " = create(new WebColor(\"" + hexValue.toUpperCase() + "\"));\n\n");
-
-            try {
-                java.saveJavaSource(jInterface);
-            } catch (final FileNotFoundException e) {
-                ShellMessages.error(out, messages.getMessage("unable.to.save.file", capsColorName));
-            }
-        }
-        else {
-            ShellMessages.warn(out, messages.getMessage("color.constant.already.exist", capsColorName));
-        }
-
+        final String field = "    /** Color constant for {}. */\n    ColorItem {} = create(new WebColor(\"" + hexValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
+        ResourceUtils.manageColorResource(project, shell, out, colorName, field);
     }
 
     /**
@@ -401,7 +453,7 @@ public class JRebirthPlugin implements Plugin {
         {
             final DirectoryResource resourceDir = this.project.getFacet(ResourceFacet.class).getResourceFolder();
 
-            createFullPackageIfNotExist(resourceDir, settings.getImportPackage() + ".ui.fxml", out);          
+            createFullPackageIfNotExist(resourceDir, settings.getImportPackage() + ".ui.fxml", out);
             determineFileAvailabilty(this.project, resourceDir, CreationType.FXML, javaStandardClassName, out, "", ".fxml", settings);
         }
 
