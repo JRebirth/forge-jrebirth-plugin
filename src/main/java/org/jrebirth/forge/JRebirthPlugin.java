@@ -31,11 +31,11 @@ import javax.inject.Inject;
 import freemarker.template.TemplateException;
 
 import org.jrebirth.forge.completer.AppPropertyCompleter;
+import org.jrebirth.forge.completer.ColorTypeCompleter;
 import org.jrebirth.forge.utils.PluginUtils;
 import org.jrebirth.forge.utils.PluginUtils.CreationType;
 import org.jrebirth.forge.utils.ResourceUtils;
 import org.jrebirth.forge.utils.TemplateSettings;
-
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.JavaSourceFacet;
@@ -260,101 +260,39 @@ public class JRebirthPlugin implements Plugin {
     /**
      * Add gray color to color resource.
      * 
+     * Type of the command are classified as <br/>
+     * Gray - the hex value<br/>
+     * Web - the hex value<br/>
+     * HSB - the Hue,Saturation,Brightness values separated by comma<br/>
+     * RGB01 - the Red,Green,Blue values separated by comma [0.0-1.0]<br/>
+     * RGB255 - the Red,Green,Blue values separated by comma [0-255]<br/>
+     * 
      * @param out the out
      * @param colorName the color name
      * @param hexValue the hex value
      */
-    @Command(value = "color-add-gray", help = "Add gray color to color resource")
+    @Command(value = "color-add", help = "Add a color variable in Color Resource")
     public void colorAddGray(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
+            @Option(name = "name", shortName = "n", required = true, help = "Name of color object")
             final String colorName,
-            @Option(name = "gray", shortName = "g", required = true, help = "Color's gray value [0.0-1.0]")
-            final String grayValue,
+            @Option(name = "value", shortName = "v", required = true, help = "Color's value")
+            final String colorValue,
+            @Option(name = "colorType", shortName = "t", completer = ColorTypeCompleter.class, required = true, help = "Type of the color you like to add")
+            final String colorType,
             @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
             final double opacityValue) {
 
-        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new GrayColor(\"" + grayValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
-        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
-    }
+        if (ColorTypeCompleter.isColorTypeExist(colorType) == false) {
+            ShellMessages.error(out, messages.getMessage("color.type.is.incorrect"));
+            return;
+        }
 
-    /**
-     * Add HSB color to color resource.
-     * 
-     * @param out the out
-     * @param colorName the color name
-     * @param hsbValue the Hue,Saturation,Brightness values separated by comma
-     */
-    @Command(value = "color-add-hsb", help = "Add HSB color to color resource")
-    public void colorAddHSB(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
-            final String colorName,
-            @Option(name = "hsb", shortName = "h", required = true, help = "Color's hue,saturation, brightness [0.0-360.0],[0.0-1.0],[0.0-1.0]")
-            final String hsbValue,
-            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
-            final double opacityValue) {
+        if (ResourceUtils.validateColorValueUsingType(colorType, colorValue) == false) {
+            ShellMessages.error(out, messages.getMessage("color.value.is.incorrect", colorValue, colorType));
+            return;
+        }
 
-        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new HSBColor(\"" + hsbValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
-        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
-    }
-
-    /**
-     * Add RGB 01 color to color resource.
-     * 
-     * @param out the out
-     * @param colorName the color name
-     * @param rgb the Red,Green,Blue values separated by comma [0.0-1.0]
-     */
-    @Command(value = "color-add-rgb01", help = "Add RGB 01 color to color resource")
-    public void colorAddRGB01(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
-            final String colorName,
-            @Option(name = "rgb", shortName = "r", required = true, help = "Color's Red,Green,Blue [0.0-1.0],[0.0-1.0],[0.0-1.0]")
-            final String rgbValue,
-            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
-            final double opacityValue) {
-
-        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new RGB01Color(\"" + rgbValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
-        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
-    }
-
-    /**
-     * Add RGB 255 color to color resource.
-     * 
-     * @param out the out
-     * @param colorName the color name
-     * @param rgb the Red,Green,Blue values separated by comma [0-255]
-     */
-    @Command(value = "color-add-rgb255", help = "Add RGB 255 color to color resource")
-    public void colorAddRGB255(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
-            final String colorName,
-            @Option(name = "rgb", shortName = "r", required = true, help = "Color's Red,Green,Blue [0-255],[0-255],[0-255]")
-            final String rgbValue,
-            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
-            final double opacityValue) {
-
-        final String fieldDefinition = "    /** Color constant for {}. */\n    ColorItem {} = create(new RGB255Color(\"" + rgbValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
-        ResourceUtils.manageColorResource(project, shell, out, colorName, fieldDefinition);
-    }
-
-    /**
-     * Add web color to color resource.
-     * 
-     * @param out the out
-     * @param colorName the color name
-     * @param hexValue the hex value
-     */
-    @Command(value = "color-add-web", help = "Add web color to color resource")
-    public void colorAddWeb(final PipeOut out,
-            @Option(name = "name", shortName = "n", required = true, help = "Name of color object.")
-            final String colorName,
-            @Option(name = "hex", shortName = "h", required = true, help = "Color's hex value")
-            final String hexValue,
-            @Option(name = "opacity", shortName = "o", required = false, defaultValue = "1.0", help = "Color's opacity value")
-            final double opacityValue) {
-
-        final String field = "    /** Color constant for {}. */\n    ColorItem {} = create(new WebColor(\"" + hexValue.toUpperCase() + "\", " + opacityValue + "));\n\n";
-        ResourceUtils.manageColorResource(project, shell, out, colorName, field);
+        ResourceUtils.manageColorResource(project, shell, out, colorName, colorValue, colorType, opacityValue);
     }
 
     /**
