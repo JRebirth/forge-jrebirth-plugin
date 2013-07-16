@@ -27,13 +27,13 @@ public class ResourceUtils {
     private static final String COLOR_RGB01_PATTERN = "((0\\.[0-9]*|1\\.0)\\s*?_\\s*?){2}(0\\.[0-9]*|1\\.0)"; // 0.0-1.0,0.0-1.0,0.0-1.0
 
     /** The Constant COLOR_HSB_PATTERN. */
-    private static final String COLOR_HSB_PATTERN = "((0\\.[0-9]*|([012]?[0-9]?[0-9]|3[0-5][0-9])\\.[0-9]*|360.0)\\s*?_\\s*?){2}(0\\.[0-9]*|([012]?[0-9]?[0-9]|3[0-5][0-9])\\.[0-9]*|360.0)"; // 0.0-360.0,0.0-1.0,0.0-1.0
+    private static final String COLOR_HSB_PATTERN = "((0\\.[0-9]*|([012]?[0-9]?[0-9]|3[0-5][0-9])\\.[0-9]*|360.0))(_0\\.[0-9]|1\\.0){2}"; // 0.0-360.0,0.0-1.0,0.0-1.0
 
     /** The Constant COLOR_RGB255_PATTERN. */
     private static final String COLOR_RGB255_PATTERN = "(([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\\s*?_\\s*?){2}([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"; // 0-255,0-255,0-255
 
     /** The Constant COLOR_GRAY_PATTERN. */
-    private static final String COLOR_GRAY_PATTERN = "(0\\.[0-9]*|1\\.0)"; // [0.0-1.0]
+    private static final String COLOR_GRAY_PATTERN = "(0\\.[0-9]|1\\.0)"; // [0.0-1.0]
 
     /** The Constant COLOR_WEB_PATTERN. */
     private static final String COLOR_WEB_PATTERN = "[0-9A-F]{6}"; // [0-9A-F]{6}
