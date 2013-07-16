@@ -288,7 +288,7 @@ public class JRebirthPlugin implements Plugin {
         }
 
         if (ResourceUtils.validateColorValueUsingType(colorType, colorValue) == false) {
-            ShellMessages.error(out, messages.getMessage("color.value.is.incorrect", colorValue, colorType));
+            ShellMessages.error(out, messages.getMessage("color.value."+ colorType.toLowerCase() +".is.incorrect", colorType.toLowerCase()));
             return;
         }
 
