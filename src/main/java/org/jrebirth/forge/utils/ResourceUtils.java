@@ -72,7 +72,7 @@ public class ResourceUtils {
 
         if (pattern != null) {
 
-            Matcher matcher = pattern.matcher(colorValue);
+            final Matcher matcher = pattern.matcher(colorValue);
             return matcher.matches();
 
         } else {
@@ -98,8 +98,9 @@ public class ResourceUtils {
         final MetadataFacet metadata = project.getFacet(MetadataFacet.class);
         final DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
         final String topLevelPackage = metadata.getTopLevelPackage();
+        boolean catUpdate = false;
 
-        String type = ((colorType.equalsIgnoreCase("web") ? "Web" : (colorType.equalsIgnoreCase("gray") ? "Gray" : colorType.toUpperCase())));
+        final String type = colorType.equalsIgnoreCase("web") ? "Web" : colorType.equalsIgnoreCase("gray") ? "Gray" : colorType.toUpperCase();
 
         final String importString = "org.jrebirth.core.resource.color." + type + "Color";
 
@@ -119,22 +120,28 @@ public class ResourceUtils {
 
         final String capsColorName = StringUtils.camelCaseToUnderscore(colorName);
 
-        if (jInterface.hasImport(importString) == false)
+        if (jInterface.hasImport(importString) == false) {
             jInterface.addImport(importString);
+        }
 
         if (jInterface.hasField(capsColorName) == false) {
-
             jInterface.addField(fieldDefinition.replaceAll("\\{\\}", capsColorName));
-
-            try {
-
-                java.saveJavaSource(jInterface);
-            } catch (final FileNotFoundException e) {
-                ShellMessages.error(out, messages.getMessage("unable.to.save.file", capsColorName));
-            }
         }
         else {
-            ShellMessages.warn(out, messages.getMessage("color.constant.already.exist", capsColorName));
+            catUpdate = shell.promptBoolean(messages.getMessage("variable.already.exists.update"), false);
+            if (catUpdate == true) {
+                jInterface.removeField(jInterface.getField(capsColorName));
+                jInterface.addField(fieldDefinition.replaceAll("\\{\\}", capsColorName));
+            } else {
+                return;
+            }
+        }
+        try {
+
+            java.saveJavaSource(jInterface);
+        } catch (final FileNotFoundException e) {
+            ShellMessages.error(out, messages.getMessage("unable.to.save.file", capsColorName));
+
         }
     }
 
@@ -152,23 +159,19 @@ public class ResourceUtils {
 
         } else if (type.equalsIgnoreCase("hsb")) {
 
-            String[] hsb = colorValue.split("_");
+            final String[] hsb = colorValue.split("_");
             constructor = "create(new HSBColor(" + hsb[0] + ", " + hsb[1] + ", " + hsb[2] + ", " + opacityValue + "));";
 
         } else if (type.equalsIgnoreCase("rgb01")) {
 
-            String[] rgb = colorValue.split("_");
+            final String[] rgb = colorValue.split("_");
             constructor = "create(new RGB01Color(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + opacityValue + "));";
 
         } else if (type.equalsIgnoreCase("rgb255")) {
 
-            String[] rgb = colorValue.split("_");
+            final String[] rgb = colorValue.split("_");
             constructor = "create(new RGB255Color(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + opacityValue + "));";
-
         }
-
         return constructor;
-
     }
-
 }
