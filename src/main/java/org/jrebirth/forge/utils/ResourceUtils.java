@@ -102,8 +102,6 @@ public class ResourceUtils {
 
         final String type = colorType.equalsIgnoreCase("web") ? "Web" : colorType.equalsIgnoreCase("gray") ? "Gray" : colorType.toUpperCase();
 
-        final String importString = "org.jrebirth.core.resource.color." + type + "Color";
-
         final String fieldDefinition = " /** Color constant for {}. */\n   ColorItem {} = " + buildConstructorByColorType(type, colorValue, opacityValue) + "\n\n";
 
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
@@ -120,16 +118,12 @@ public class ResourceUtils {
 
         final String capsColorName = StringUtils.camelCaseToUnderscore(colorName);
 
-        if (jInterface.hasImport(importString) == false) {
-            jInterface.addImport(importString);
-        }
-
         if (jInterface.hasField(capsColorName) == false) {
             jInterface.addField(fieldDefinition.replaceAll("\\{\\}", capsColorName));
         }
         else {
             catUpdate = shell.promptBoolean(messages.getMessage("variable.already.exists.update"), false);
-            if (catUpdate == true) {
+            if (catUpdate) {
                 jInterface.removeField(jInterface.getField(capsColorName));
                 jInterface.addField(fieldDefinition.replaceAll("\\{\\}", capsColorName));
             } else {

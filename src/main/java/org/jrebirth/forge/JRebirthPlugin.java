@@ -156,29 +156,21 @@ public class JRebirthPlugin implements Plugin {
      * If jrebirth command is not executed with any argument this method will be called.
      * 
      * @param out the out
-     * @param allDetails the all details
-     * @param jrebirthVersion the jrebirth version
+     * @throws Exception the exception
      */
     @DefaultCommand
-    public void defaultCommand(final PipeOut out,
-            @Option(name = "all", shortName = "a", flagOnly = true, defaultValue = "false", help = "Finds and displays all the detail regardign this JRebirth project.")
-            final boolean allDetails,
-            @Option(name = "jrebirthVersion", shortName = "jrv", flagOnly = true, defaultValue = "false", help = "Finds and displays JRebirht version added to this project.")
-            final boolean jrebirthVersion) {
+    public void defaultCommand(final PipeOut out) throws Exception {
 
-        final DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
+        ShellMessages.info(out, "Project Information:");
+        shell.execute("project");
+        shell.execute("project list-dependencies");
+        shell.execute("project list-repositories");
+        if (this.project.hasFacet(JRebirthFacet.class)) {
+            ShellMessages.success(out, messages.getMessage("jrebirth.is.installed"));
+        } else {
+            ShellMessages.warn(out, messages.getMessage("jrebirth.is.not.installed"));
+        }
 
-        if (allDetails || jrebirthVersion)
-        {
-            ShellMessages.info(out, "JRebirth Version : " + dFacet.getDirectDependency(jrebirthCoreDependency()).getVersion());
-        }
-        else {
-            if (this.project.hasFacet(JRebirthFacet.class)) {
-                ShellMessages.info(out, messages.getMessage("jrebirth.is.installed"));
-            } else {
-                ShellMessages.warn(out, messages.getMessage("jrebirth.is.not.installed"));
-            }
-        }
     }
 
     /**
@@ -269,7 +261,9 @@ public class JRebirthPlugin implements Plugin {
      * 
      * @param out the out
      * @param colorName the color name
-     * @param hexValue the hex value
+     * @param colorValue the color value
+     * @param colorType the color type
+     * @param opacityValue the opacity value
      */
     @Command(value = "color-add", help = "Add a color variable in Color Resource")
     public void colorAddGray(final PipeOut out,
@@ -288,7 +282,7 @@ public class JRebirthPlugin implements Plugin {
         }
 
         if (ResourceUtils.validateColorValueUsingType(colorType, colorValue) == false) {
-            ShellMessages.error(out, messages.getMessage("color.value."+ colorType.toLowerCase() +".is.incorrect", colorType.toLowerCase()));
+            ShellMessages.error(out, messages.getMessage("color.value." + colorType.toLowerCase() + ".is.incorrect", colorType.toLowerCase()));
             return;
         }
 
@@ -482,7 +476,6 @@ public class JRebirthPlugin implements Plugin {
             createPackageIfNotExist(directory, CreationType.RESOURCE.getPackageName(), out);
 
             if (directory != null && directory.getChild(finalName + ".java").exists() == false) {
-                // createJavaFileUsingTemplate(project, "", context);
 
                 if (allResource || colorGenerate) {
                     createJavaInterfaceUsingTemplate(this.project, "TemplateColorResource.ftl", context);
