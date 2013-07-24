@@ -264,7 +264,7 @@ public class JRebirthPlugin implements Plugin {
      * @param opacityValue the opacity value
      */
     @Command(value = "color-add", help = "Add a color variable in Color Resource")
-    public void colorAddGray(
+    public void colorAdd(
             final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of color object")
             final String colorName,
