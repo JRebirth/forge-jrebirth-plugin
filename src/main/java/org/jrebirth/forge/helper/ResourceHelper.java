@@ -163,29 +163,30 @@ public class ResourceHelper {
     private static String buildConstructorByColorType(final String type, final String colorValue, final double opacityValue) {
 
         String constructor = "";
+        String opacityString = ((opacityValue == 1.0D)? "":","+opacityValue);
 
         if (type.equalsIgnoreCase("web")) {
 
-            constructor = "create(new WebColor(\"" + colorValue.toUpperCase() + "\", " + opacityValue + "));";
+            constructor = "create(new WebColor(\"" + colorValue.toUpperCase() + "\"" + opacityString + "));";
 
         } else if (type.equalsIgnoreCase("gray")) {
 
-            constructor = "create(new GrayColor(" + colorValue + ", " + opacityValue + "));";
+            constructor = "create(new GrayColor(" + colorValue + opacityString + "));";
 
         } else if (type.equalsIgnoreCase("hsb")) {
 
             final String[] hsb = colorValue.split("_");
-            constructor = "create(new HSBColor(" + hsb[0] + ", " + hsb[1] + ", " + hsb[2] + ", " + opacityValue + "));";
+            constructor = "create(new HSBColor(" + hsb[0] + ", " + hsb[1] + ", " + hsb[2] + opacityString + "));";
 
         } else if (type.equalsIgnoreCase("rgb01")) {
 
             final String[] rgb = colorValue.split("_");
-            constructor = "create(new RGB01Color(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + opacityValue + "));";
+            constructor = "create(new RGB01Color(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + opacityString + "));";
 
         } else if (type.equalsIgnoreCase("rgb255")) {
 
             final String[] rgb = colorValue.split("_");
-            constructor = "create(new RGB255Color(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + opacityValue + "));";
+            constructor = "create(new RGB255Color(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + opacityString + "));";
         }
         return constructor;
     }
