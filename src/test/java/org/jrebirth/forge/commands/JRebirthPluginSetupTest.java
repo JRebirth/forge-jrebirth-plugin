@@ -1,14 +1,17 @@
-package org.jrebirth.forge;
+package org.jrebirth.forge.commands;
 
 import static org.jrebirth.forge.utils.PluginUtils.javafxDependency;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
 import static org.jrebirth.forge.utils.PluginUtils.slf4jDependency;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.jboss.forge.project.facets.DependencyFacet;
 import org.jboss.forge.project.facets.ResourceFacet;
 import org.jboss.forge.resources.DirectoryResource;
+import org.jrebirth.forge.AbstractJRebirthPluginTest;
+import org.jrebirth.forge.JRebirthFacet;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -96,8 +99,8 @@ public class JRebirthPluginSetupTest extends AbstractJRebirthPluginTest {
     public void testSnapshotRepoNotPresent() {
         final DependencyFacet dependencyFacet = this.project
                 .getFacet(DependencyFacet.class);
-        assertTrue(dependencyFacet
-                .hasRepository("http://repo.jrebirth.org/libs-snapshot") == false);
+        assertFalse(dependencyFacet
+                .hasRepository("http://repo.jrebirth.org/libs-snapshot"));
 
     }
 
@@ -107,7 +110,7 @@ public class JRebirthPluginSetupTest extends AbstractJRebirthPluginTest {
         final DependencyFacet dependencyFacet = this.project
                 .getFacet(DependencyFacet.class);
         assertTrue(dependencyFacet
-                .hasRepository("http://repo.jrebirth.org/libs-snapshot") == true);
+                .hasRepository("http://repo.jrebirth.org/libs-snapshot"));
     }
 
     @Test
@@ -116,8 +119,8 @@ public class JRebirthPluginSetupTest extends AbstractJRebirthPluginTest {
         executeSetupWithRemoveSnapshotRepo();
         final DependencyFacet dependencyFacet = this.project
                 .getFacet(DependencyFacet.class);
-        assertTrue(dependencyFacet
-                .hasRepository("http://repo.jrebirth.org/libs-snapshot") == false);
+        assertFalse(dependencyFacet
+                .hasRepository("http://repo.jrebirth.org/libs-snapshot"));
     }
 
     private void executeSetupWithAddSnapshotRepo() throws Exception {
