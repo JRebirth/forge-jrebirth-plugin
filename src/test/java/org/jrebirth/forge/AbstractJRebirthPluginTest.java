@@ -7,9 +7,14 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jrebirth.forge.utils.PluginUtils;
 import org.junit.Before;
 
+/**
+ * Abstract TestCase for JRebirth
+ * 
+ * @author Rajmahendra Hegde <rajmahendra@gmail.com>
+ * 
+ */
+public abstract class AbstractJRebirthPluginTest extends AbstractShellTest {
 
-public abstract class  AbstractJRebirthPluginTest extends AbstractShellTest {
-    
     protected Project project = null;
 
     @Deployment
@@ -23,7 +28,5 @@ public abstract class  AbstractJRebirthPluginTest extends AbstractShellTest {
         project = initializeJavaProject();
         getShell().execute("jrebirth setup");
     }
-    
-    
-    
+
 }
