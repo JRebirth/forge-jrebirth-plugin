@@ -12,23 +12,40 @@
  */
 package org.jrebirth.forge;
 
+import static org.jrebirth.forge.helper.MavenProfilePluginHelper.setupMavenProjectProfiles;
+import static org.jrebirth.forge.utils.PluginUtils.createJNLPConfiguration;
+import static org.jrebirth.forge.utils.PluginUtils.createJavaFileUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.createResourceFileUsingTemplate;
+import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
 import static org.jrebirth.forge.utils.PluginUtils.installDependencies;
 import static org.jrebirth.forge.utils.PluginUtils.javafxDependency;
 import static org.jrebirth.forge.utils.PluginUtils.jrebirthCoreDependency;
+import static org.jrebirth.forge.utils.PluginUtils.messages;
 import static org.jrebirth.forge.utils.PluginUtils.slf4jDependency;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 
 import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.project.facets.DependencyFacet;
+import org.jboss.forge.project.facets.MetadataFacet;
+import org.jboss.forge.project.facets.ResourceFacet;
+import org.jboss.forge.resources.DirectoryResource;
+import org.jboss.forge.shell.ShellMessages;
 import org.jboss.forge.shell.ShellPrintWriter;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.RequiresFacet;
+import org.jrebirth.forge.utils.TemplateSettings;
+
+import freemarker.template.TemplateException;
 
 /**
- * JRebirth Facet
- * 
+ * JRebirth Facet.
  * 
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  */
@@ -47,54 +64,106 @@ public class JRebirthFacet extends BaseFacet {
     @Inject
     private ShellPrintWriter writer;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.jboss.forge.project.Facet#install()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean install() {
         this.dependencyFacet = this.project.getFacet(DependencyFacet.class);
 
-        this.dependencyFacet.addRepository("JRebirth Maven Repository", "http://repo.jrebirth.org/libs-release");
-        this.dependencyFacet.addRepository("JRebirth Maven Snapshot Repository", "http://repo.jrebirth.org/libs-snapshot");
+        this.dependencyFacet.addRepository(messages.getKeyValue("jrebirthReleaseRepoName"), messages.getKeyValue("jrebirthReleaseRepoUrl"));
 
-        installDependencies(project, shell, writer, jrebirthCoreDependency(), false);
-        installDependencies(project, shell, writer, javafxDependency(), false);
-        installDependencies(project, shell, writer, slf4jDependency(), false);
+        installDependencies(this.project, this.shell, this.writer, jrebirthCoreDependency(), false);
+        installDependencies(this.project, this.shell, this.writer, javafxDependency(), false);
+        installDependencies(this.project, this.shell, this.writer, slf4jDependency(), false);
+
+        final MetadataFacet metadata = this.project
+                .getFacet(MetadataFacet.class);
+
+        TemplateSettings settings = new TemplateSettings(
+                firstLetterCaps(metadata.getProjectName()) + "App",
+                metadata.getTopLevelPackage());
+        final Map<String, TemplateSettings> context = new HashMap<String, TemplateSettings>();
+        settings.setTopLevelPacakge(metadata.getTopLevelPackage());
+
+        context.put("settings", settings);
+        try {
+            createJavaFileUsingTemplate(this.project,
+                    "TemplateApplication.ftl", context);
+        } catch (IOException | TemplateException e) {
+            ShellMessages.error(writer, messages.getMessage("unable.to.create.mainapp"));
+        }
+
+        final ResourceFacet resourceFacet = this.project
+                .getFacet(ResourceFacet.class);
+        final File rbPropertiesFile = resourceFacet.createResource(
+                new char[0], "jrebirth.properties")
+                .getUnderlyingResourceObject();
+
+        settings = new TemplateSettings("jrebirth.properties", "");
+
+        try {
+            createResourceFileUsingTemplate(this.project,
+                    "TemplateMainProperties.ftl", rbPropertiesFile, context);
+        } catch (IOException | TemplateException e) {
+            ShellMessages.error(writer, messages.getMessage("unable.to.create.jrproperties"));
+        }
+
+        final DirectoryResource directory = resourceFacet
+                .getResourceFolder();
+        directory.getChildDirectory("fonts").mkdir();
+        directory.getChildDirectory("images").mkdir();
+        directory.getChildDirectory("styles").mkdir();
+
+        try {
+            createJNLPConfiguration(this.project);
+            ShellMessages.warn(writer,
+                    messages.getMessage("jnlp.dependency.is.setup"));
+        } catch (IOException | TemplateException e) {
+            ShellMessages.error(writer, messages.getMessage("unable.to.create.jnlp"));
+        }
+
+        setupMavenProjectProfiles(this.project,
+                metadata.getTopLevelPackage(), metadata.getProjectName());
 
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.jboss.forge.project.Facet#isInstalled()
+    /**
+     * {@inheritDoc}
      */
     @Override
     public boolean isInstalled() {
 
-        DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
+        final DependencyFacet dFacet = this.project.getFacet(DependencyFacet.class);
 
-        if (dFacet.hasDirectDependency(jrebirthCoreDependency()) && dFacet.hasRepository("http://repo.jrebirth.org/libs-release")) {
+        if (dFacet.hasDirectDependency(jrebirthCoreDependency()) && dFacet.hasRepository(messages.getKeyValue("jrebirthReleaseRepoUrl"))) {
             return true;
         }
 
         return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.jboss.forge.project.facets.BaseFacet#uninstall()
+    /**
+     * Adds the snapshot repository.
      */
-    @Override
-    public boolean uninstall() {
-        this.dependencyFacet = this.project.getFacet(DependencyFacet.class);
-        this.dependencyFacet.removeDependency(jrebirthCoreDependency());
-        this.dependencyFacet.removeDependency(javafxDependency());
-        this.dependencyFacet.removeRepository("JRebirth Maven Repository");
-        return true;
+    public void addSnapshotRepository() {
+        if (this.dependencyFacet.hasRepository(messages.getKeyValue("jrebirthSnapshotRepoUrl")) == false) {
+            this.dependencyFacet.addRepository(messages.getKeyValue("jrebirthSnapshotRepoName"), messages.getKeyValue("jrebirthSnapshotRepoUrl"));
+            ShellMessages.info(this.writer, messages.getMessage("jrebirth.snapshot.repo.added"));
+        }
+
+    }
+
+    /**
+     * Removes the snapshot repository.
+     */
+    public void removeSnapshotRepository() {
+        if (this.dependencyFacet.hasRepository(messages.getKeyValue("jrebirthSnapshotRepoUrl")) == true) {
+            this.dependencyFacet.removeRepository(messages.getKeyValue("jrebirthSnapshotRepoUrl"));
+            ShellMessages.info(this.writer, messages.getMessage("jrebirth.snapshot.repo.removed"));
+        }
+
     }
 
 }
