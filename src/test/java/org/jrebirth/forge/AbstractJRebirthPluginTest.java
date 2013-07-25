@@ -11,6 +11,7 @@ import org.jboss.forge.project.facets.MetadataFacet;
 import org.jboss.forge.resources.DirectoryResource;
 import org.jboss.forge.shell.util.Packages;
 import org.jboss.forge.test.AbstractShellTest;
+import org.jboss.forge.test.SingletonAbstractShellTest;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jrebirth.forge.utils.PluginUtils;
 import org.junit.Before;
@@ -21,7 +22,7 @@ import org.junit.Before;
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  * 
  */
-public abstract class AbstractJRebirthPluginTest extends AbstractShellTest {
+public abstract class AbstractJRebirthPluginTest extends SingletonAbstractShellTest {
 
     protected Project project = null;
     protected MetadataFacet metadata;
