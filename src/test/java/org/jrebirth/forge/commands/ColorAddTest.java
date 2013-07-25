@@ -42,12 +42,14 @@ public class ColorAddTest extends AbstractJRebirthPluginTest {
         executeColorAddWindowBorderWebCCCCCC();
         DirectoryResource directory = null;
         directory = getJavaSourceDirResource().getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
+        System.out.println(projectName + "Colors.java");
         assertTrue(directory.getChild(projectName + "Colors.java").exists());
     }
 
     @Test
     public void testForExistanceOfTheVariableCreated() throws Exception {
         executeColorAddWindowBorderWebCCCCCC();
+        System.out.println(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."+ projectName + "Colors.java");
         final JavaInterface jInterface = parseJavaInterface(topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", projectName + "Colors.java");
         assertTrue(jInterface.hasField("WINDOW_BORDER"));
     }
