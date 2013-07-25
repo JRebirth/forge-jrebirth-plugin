@@ -6,7 +6,8 @@ This Plugin makes life easy to work with Maven + JavaFX with JRebirth Framework.
 
     This project is currently in progress. You may not get full features currenlty.
     Stay tuned.
-
+    
+[![Build Status](http://ci.jrebirth.org/job/JRebirth-Forge-master/badge/icon)](http://ci.jrebirth.org/job/JRebirth-Forge-master/)
 Prerequisite
 =============
 * [JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)
