@@ -1,11 +1,8 @@
 package org.jrebirth.forge.commands;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaInterface;
 import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.resources.DirectoryResource;
@@ -25,32 +22,52 @@ public class ColorAddTest extends AbstractJRebirthPluginTest {
     @Test
     public void testResourceIsNotExisitInStartup() {
         DirectoryResource directory = null;
-        final DirectoryResource sourceFolder = project.getFacet(JavaSourceFacet.class).getSourceFolder();
+        final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
 
-        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
+        directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
         assertFalse(directory.isDirectory());
     }
 
     @Test
     public void testForExistanceOfResourcePackage() throws Exception {
         executeColorAddWindowBorderWebCCCCCC();
-        assertTrue(isResourcePackageExists(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
+        assertTrue(isResourcePackageExists(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
     }
 
     @Test
     public void testForExistanceOfColorClass() throws Exception {
         executeColorAddWindowBorderWebCCCCCC();
         DirectoryResource directory = null;
-        directory = getJavaSourceDirResource().getChildDirectory(Packages.toFileSyntax(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
-        System.out.println(projectName + "Colors.java");
-        assertTrue(directory.getChild(projectName + "Colors.java").exists());
+        directory = getJavaSourceDirResource().getChildDirectory(Packages.toFileSyntax(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
+        System.out.println(this.projectName + "Colors.java");
+        assertTrue(directory.getChild(this.projectName + "Colors.java").exists());
     }
 
     @Test
     public void testForExistanceOfTheVariableCreated() throws Exception {
         executeColorAddWindowBorderWebCCCCCC();
-        System.out.println(topLevelPackage + CreationType.RESOURCE.getPackageName() + "."+ projectName + "Colors.java");
-        final JavaInterface jInterface = parseJavaInterface(topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", projectName + "Colors.java");
+        System.out.println(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "." + this.projectName + "Colors.java");
+        final JavaInterface jInterface = parseJavaInterface(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", this.projectName + "Colors.java");
+        assertTrue(jInterface.hasField("WINDOW_BORDER"));
+    }
+
+    @Test
+    public void testForVariableAlreadyExistWhenYes() throws Exception {
+        executeColorAddWindowBorderWebCCCCCC();
+        queueInputLines("y");
+        executeColorAddWindowBorderWebCCCCCC();
+        System.out.println(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "." + this.projectName + "Colors.java");
+        final JavaInterface jInterface = parseJavaInterface(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", this.projectName + "Colors.java");
+        assertTrue(jInterface.hasField("WINDOW_BORDER"));
+    }
+
+    @Test
+    public void testForVariableAlreadyExistWhenNo() throws Exception {
+        executeColorAddWindowBorderWebCCCCCC();
+        queueInputLines("n");
+        executeColorAddWindowBorderWebCCCCCC();
+        System.out.println(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "." + this.projectName + "Colors.java");
+        final JavaInterface jInterface = parseJavaInterface(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", this.projectName + "Colors.java");
         assertTrue(jInterface.hasField("WINDOW_BORDER"));
     }
 
