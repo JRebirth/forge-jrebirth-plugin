@@ -1,5 +1,7 @@
 package org.jrebirth.forge;
 
+import static org.jrebirth.forge.utils.PluginUtils.firstLetterCaps;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.JavaInterface;
@@ -11,7 +13,6 @@ import org.jboss.forge.shell.util.Packages;
 import org.jboss.forge.test.AbstractShellTest;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jrebirth.forge.utils.PluginUtils;
-import org.jrebirth.forge.utils.PluginUtils.CreationType;
 import org.junit.Before;
 
 /**
@@ -24,6 +25,9 @@ public abstract class AbstractJRebirthPluginTest extends AbstractShellTest {
 
     protected Project project = null;
     protected MetadataFacet metadata;
+    
+    protected String topLevelPackage= null;
+    protected String projectName = null;
 
     @Deployment
     public static JavaArchive getDeployment() {
@@ -35,6 +39,8 @@ public abstract class AbstractJRebirthPluginTest extends AbstractShellTest {
     public void initializeJRebirthFacesProject() throws Exception {
         project = initializeJavaProject();
         metadata = project.getFacet(MetadataFacet.class);
+        topLevelPackage = metadata.getTopLevelPackage();
+        projectName = firstLetterCaps(metadata.getProjectName());
         getShell().execute("jrebirth setup");
     }
     
