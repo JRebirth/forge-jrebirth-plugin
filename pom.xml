@@ -8,6 +8,11 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<name>Forge-JRebirth-Plugin</name>
 	<description>JBoss Forge plugin for JRebirth</description>
+
+	<prerequisites>
+		<maven>3.0</maven>
+	</prerequisites>
+
 	<organization>
 		<name>JRebirth OSS</name>
 		<url>http://www.jrebirth.org</url>

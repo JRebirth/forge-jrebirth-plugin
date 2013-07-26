@@ -23,7 +23,6 @@ public class ColorAddTest extends AbstractJRebirthPluginTest {
     public void testResourceIsNotExisitInStartup() {
         DirectoryResource directory = null;
         final DirectoryResource sourceFolder = this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
-
         directory = sourceFolder.getChildDirectory(Packages.toFileSyntax(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
         assertFalse(directory.isDirectory());
     }
@@ -38,15 +37,13 @@ public class ColorAddTest extends AbstractJRebirthPluginTest {
     public void testForExistanceOfColorClass() throws Exception {
         executeColorAddWindowBorderWebCCCCCC();
         DirectoryResource directory = null;
-        directory = getJavaSourceDirResource().getChildDirectory(Packages.toFileSyntax(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
-        System.out.println(this.projectName + "Colors.java");
+        directory = getJavaSourceDir().getChildDirectory(Packages.toFileSyntax(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "."));
         assertTrue(directory.getChild(this.projectName + "Colors.java").exists());
     }
 
     @Test
     public void testForExistanceOfTheVariableCreated() throws Exception {
         executeColorAddWindowBorderWebCCCCCC();
-        System.out.println(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "." + this.projectName + "Colors.java");
         final JavaInterface jInterface = parseJavaInterface(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", this.projectName + "Colors.java");
         assertTrue(jInterface.hasField("WINDOW_BORDER"));
     }
@@ -56,7 +53,6 @@ public class ColorAddTest extends AbstractJRebirthPluginTest {
         executeColorAddWindowBorderWebCCCCCC();
         queueInputLines("y");
         executeColorAddWindowBorderWebCCCCCC();
-        System.out.println(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "." + this.projectName + "Colors.java");
         final JavaInterface jInterface = parseJavaInterface(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", this.projectName + "Colors.java");
         assertTrue(jInterface.hasField("WINDOW_BORDER"));
     }
@@ -66,7 +62,6 @@ public class ColorAddTest extends AbstractJRebirthPluginTest {
         executeColorAddWindowBorderWebCCCCCC();
         queueInputLines("n");
         executeColorAddWindowBorderWebCCCCCC();
-        System.out.println(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + "." + this.projectName + "Colors.java");
         final JavaInterface jInterface = parseJavaInterface(this.topLevelPackage + CreationType.RESOURCE.getPackageName() + ".", this.projectName + "Colors.java");
         assertTrue(jInterface.hasField("WINDOW_BORDER"));
     }
