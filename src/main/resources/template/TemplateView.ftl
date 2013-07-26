@@ -7,6 +7,11 @@ import org.jrebirth.core.exception.CoreException;
 import org.jrebirth.core.ui.DefaultController;
 </#if>
 import org.jrebirth.core.ui.DefaultView;
+<#if settings.isFXMLCreate() >
+import org.jrebirth.core.ui.fxml.FXMLComponent;
+import org.jrebirth.core.ui.fxml.FXMLUtils;
+</#if>
+
 
 /**
 * {@inheritDoc}
