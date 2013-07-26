@@ -48,17 +48,18 @@ public abstract class AbstractJRebirthPluginTest extends AbstractShellTest {
         getShell().execute("jrebirth setup");
     }
 
-    protected DirectoryResource getJavaSourceDirResource() {
+    protected DirectoryResource getJavaSourceDir() {
         return this.project.getFacet(JavaSourceFacet.class).getSourceFolder();
     }
 
     protected boolean isResourcePackageExists(final String packageName) {
-        return getJavaSourceDirResource().getChildDirectory(Packages.toFileSyntax(packageName)).isDirectory();
+        return getJavaSourceDir().getChildDirectory(Packages.toFileSyntax(packageName)).isDirectory();
     }
 
     protected JavaInterface parseJavaInterface(final String packageName, final String javaFileName) {
         DirectoryResource directory = null;
-        directory = getJavaSourceDirResource().getChildDirectory(Packages.toFileSyntax(packageName));
+        directory = getJavaSourceDir().getChildDirectory(Packages.toFileSyntax(packageName));
+        System.out.println(directory.getFullyQualifiedName());
         return JavaParser.parse(JavaInterface.class, directory.getChild(javaFileName).getResourceInputStream());
     }
 

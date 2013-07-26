@@ -177,16 +177,19 @@ public class JRebirthPlugin implements Plugin {
             final PipeOut out,
             @Option(name = "name", shortName = "n", required = true, help = "Name of the UI Group to be created.")
             final String name,
-            @Option(name = "controllerGenerate", shortName = "cg", required = false, flagOnly = true, defaultValue = "true", help = "If true, Controller will be generated for the MVC.")
+            @Option(name = "generateAll", shortName = "a", required = false, defaultValue = "true", help = "If true, All UI will be generated for the MVC.")
+            final boolean generateAll,
+            @Option(name = "controllerGenerate", shortName = "c", required = false, flagOnly = true, defaultValue = "false", help = "If true, Controller will be generated for the MVC.")
             final boolean controllerGenerate,
-            @Option(name = "beanGenerate", shortName = "bg", required = false, flagOnly = true, defaultValue = "true", help = "If true, Bean will be generated for the MVC.")
+            @Option(name = "beanGenerate", shortName = "b", required = false, flagOnly = true, defaultValue = "false", help = "If true, Bean will be generated for the MVC.")
             final boolean beanGenerate,
-            @Option(name = "fxmlGenerate", shortName = "fg", required = false, flagOnly = true, defaultValue = "false", help = "If true, FXML document will be generated for the MVC in resource folder.")
-            final boolean fxmlGenerate
-
+            @Option(name = "fxmlGenerate", shortName = "f", required = false, flagOnly = true, defaultValue = "false", help = "If true, FXML document will be generated for the MVC.")
+            final boolean fxmlGenerate,
+            @Option(name = "modelGenerate", shortName = "m", required = false, flagOnly = true, defaultValue = "false", help = "If true, Model will be generated for the MVC.")
+            final boolean modelGenerate
             ) {
         createUiFiles(out, CreationType.UI, name, controllerGenerate,
-                beanGenerate, fxmlGenerate);
+                beanGenerate, fxmlGenerate, modelGenerate,generateAll);
     }
 
     /**
@@ -371,7 +374,7 @@ public class JRebirthPlugin implements Plugin {
      */
     private void createUiFiles(final PipeOut out, final CreationType type,
             final String name, final boolean controllerGenerate,
-            final boolean beanGenerate, final boolean fxmlGenerate) {
+            final boolean beanGenerate, final boolean fxmlGenerate, final boolean modelGenerate, final boolean generateAll) {
 
         final MetadataFacet metadata = this.project
                 .getFacet(MetadataFacet.class);
@@ -402,10 +405,12 @@ public class JRebirthPlugin implements Plugin {
         settings.setBeanCreate(beanGenerate);
         settings.setControllerCreate(controllerGenerate);
         settings.setFXMLCreate(fxmlGenerate);
-
+        
         if (fxmlGenerate) {
             final DirectoryResource resourceDir = this.project.getFacet(
                     ResourceFacet.class).getResourceFolder();
+            
+            settings.setFXMLCreate(true);
 
             createFullPackageIfNotExist(resourceDir,
                     settings.getImportPackage() + ".ui.fxml", out);
@@ -413,13 +418,19 @@ public class JRebirthPlugin implements Plugin {
                     CreationType.FXML, javaStandardClassName, out, "", ".fxml",
                     settings);
         }
-
+        
+        if (modelGenerate || generateAll)
         determineFileAvailabilty(this.project, directory, type,
                 javaStandardClassName, out, "Model", "Model.java", settings);
-
+        
+        if (generateAll)
         determineFileAvailabilty(this.project, directory, type,
                 javaStandardClassName, out, "View", "View.java", settings);
-        if (controllerGenerate) {
+
+        
+
+     
+        if (controllerGenerate && generateAll) {
             determineFileAvailabilty(this.project, directory, type,
                     javaStandardClassName, out, "Controller",
                     "Controller.java", settings);
