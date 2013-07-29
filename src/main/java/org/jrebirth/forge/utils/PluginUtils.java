@@ -70,7 +70,7 @@ public final class PluginUtils {
     public static final Object[] COMMAND_TYPES = { "DefaultCommand", "DefaultUICommand", "DefaultPoolCommand", "DefaultMultiCommand" };
 
     /** The resource bundle. */
-    public static Messages messages = Messages.INSTANCE;
+    public static MessageUtil messages = MessageUtil.INSTANCE;
 
     private static Configuration cfg = new Configuration();
     static {
