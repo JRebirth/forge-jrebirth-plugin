@@ -25,10 +25,10 @@ import java.util.ResourceBundle;
  * @author Rajmahendra Hegde <rajmahendra@gmail.com>
  * 
  */
-public final class Messages {
+public final class MessageUtil {
 
     /** The Constant INSTANCE. */
-    public static final Messages INSTANCE = new Messages();
+    public static final MessageUtil INSTANCE = new MessageUtil();
 
     /** The bundle. */
     private final ResourceBundle bundle;
@@ -36,7 +36,7 @@ public final class Messages {
     /**
      * Instantiates a new messages.
      */
-    private Messages() {
+    private MessageUtil() {
         bundle = ResourceBundle.getBundle("ResourceBundle");
     }
 
